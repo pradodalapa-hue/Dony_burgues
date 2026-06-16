@@ -16,11 +16,6 @@
                                 return;
                             }
 
-                            // Se não houver parâmetro de usuário (?u=), redireciona para a tela de cadastro
-                            if (!isLocal && !userParam) {
-                                exibirTelaCadastro();
-                            }
-
                             function bloquearAcesso() {
                                 document.write(`
                                     <style>
