@@ -1,11 +1,11 @@
 {
-  "name": "JDP INDUSTRIAL - DONY_BURGUES",
-  "short_name": "DONY_BURGUES",
-  "start_url": "index.html",
-  "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#06b6d4",
-  "icons": [
+    "name": "COMANDO CENTRAL JDP",
+    "short_name": "MAGNATA_JDP",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#050506",
+    "theme_color": "#bf953f",
+    "icons": [
         {
             "src": "icon-192.png",
             "sizes": "192x192",
@@ -19,5 +19,4 @@
             "purpose": "any maskable"
         }
     ]
-}]
 }
