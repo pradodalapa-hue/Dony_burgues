@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jdp-industrial-v16.5';
+const CACHE_NAME = 'jdp-industrial-v17.5';
 const ASSETS = [
   './',
   './index.html',
