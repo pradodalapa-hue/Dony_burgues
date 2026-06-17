@@ -1,4 +1,65 @@
-<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><link rel="manifest" href="manifest.json"><title>SISTEMA JDP</title><style>
+<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><link rel="manifest" href="manifest.json"><title>SISTEMA JDP</title>
+                    <script>
+                        // ==========================================
+                        // BARREIRA DE SEGURANÇA 1: DETECÇÃO DE PARÂMETRO
+                        // ==========================================
+                        (function() {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const host = window.location.hostname;
+                            const isLocal = host === 'localhost' || host === '127.0.0.1';
+                            const isDomainOk = host === 'jdpsistemas.com.br';
+                            const userParam = urlParams.get('u');
+
+                            // Se estiver acessando fora do domínio correto, bloqueia direto
+                            if (!isLocal && !isDomainOk) {
+                                bloquearAcesso();
+                                return;
+                            }
+
+                            // Se não houver parâmetro de usuário (?u=), redireciona para a tela de cadastro
+                            if (!isLocal && !userParam) {
+                                exibirTelaCadastro();
+                            }
+
+                            function bloquearAcesso() {
+                                document.write(`
+                                    <style>
+                                        html, body { background: #000 !important; margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; }
+                                        .tela-bloqueio { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; z-index: 9999999; }
+                                        .tela-bloqueio img { max-width: 100%; max-height: 100%; object-fit: contain; }
+                                    </style>
+                                    <div class="tela-bloqueio">
+                                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1779707901946_1776103715509.png" alt="Acesso Negado">
+                                    </div>
+                                `);
+                                window.stop();
+                                throw new Error("BLOQUEADO - DOMÍNIO INVÁLIDO");
+                            }
+
+                            function exibirTelaCadastro() {
+                                document.write(`
+                                    <style>
+                                        html, body { background: #020617 !important; margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: sans-serif; color: #fff; }
+                                        .cadastro-box { text-align: center; padding: 40px; background: #090d16; border: 1px solid #06b6d4; border-radius: 12px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.2); max-width: 400px; width: 90%; }
+                                        .logo { width: 120px; filter: drop-shadow(0 0 10px #fde047); margin-bottom: 20px; }
+                                        h2 { color: #fde047; margin-bottom: 10px; font-size: 1.5rem; text-transform: uppercase; }
+                                        p { color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin-bottom: 25px; }
+                                        .btn-cadastro { display: inline-block; padding: 15px 30px; background: #25d366; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3); transition: 0.3s; }
+                                        .btn-cadastro:hover { transform: scale(1.03); background: #20ba5a; }
+                                    </style>
+                                    <div class="cadastro-box">
+                                        <img class="logo" src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1777000164292_icon_512_1_.png">
+                                        <h2>CADASTRO OBRIGATÓRIO</h2>
+                                        <p>Para obter a sua chave exclusiva de acesso a esta plataforma JDP, clique no botão abaixo e realize o seu cadastro.</p>
+                                        <a href="https://wa.me/5592984846058?text=Ola%20Mestre%20Jose,%20quero%20me%20cadastrar%20na%20plataforma%20DONY_BURGUER'S_MAGNIFICO1!" class="btn-cadastro">CADASTRAR PELO WHATSAPP</a>
+                                    </div>
+                                `);
+                                window.stop();
+                                throw new Error("CADASTRO REQUERIDO");
+                            }
+                        })();
+                    </script>
+                    <style>
                         body { background:#020617; color:#fff; font-family:monospace; margin:0; overflow:hidden; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; }
                         #term { width:80%; text-align:left; font-size:18px; color:#06b6d4; text-shadow:0 0 5px #06b6d4; }
                         #muralha { display:none; text-align:center; animation: fadeIn 2s; }
@@ -9,24 +70,23 @@
                     <div id="term"></div>
                     <div id="muralha">
                         <img class="logo" src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1777000164292_icon_512_1_.png">
-                        <h2 style="color:#fde047">ACESSO BLOQUEADO</h2>
-                        <p>VIOLAÇÃO DE DIRETRIZ DE DOMÍNIO DETECTADA.</p>
-                        <p>ESTE SISTEMA DEVE EXECUTAR EXCLUSIVAMENTE EM: https://jdpsistemas.com.br/</p>
-                        <a href="https://wa.me/5592984846058" class="btn-w">FALAR COM MESTRE JOSÉ</a>
+                        <h2 style="color:#fde047">ACESSO NEGADO</h2>
+                        <p>USUÁRIO NÃO ENCONTRADO OU NÃO AUTORIZADO NO BANCO DE DADOS.</p>
+                        <p>SISTEMA JDP SISTEMAS - MESTRE JOSÉ</p>
+                        <a href="https://wa.me/5592984846058" class="btn-w">FALAR COM SUPORTE</a>
                     </div>
                     <script>
-                        const C = { id:'DONY_BURGUER'S_MAGNIFICO', k:'RE9OWV9CVVJHVUVS', d:'jdpsistemas.com.br' };
+                        const C = { id:'DONY_BURGUER'S_MAGNIFICO1', k:'RE9OWV9CVVJHVUVS', d:'jdpsistemas.com.br' };
                         const t = document.getElementById('term');
                         const m = document.getElementById('muralha');
                         
                         const msg = [
                             "> CONECTANDO AO SERVIDOR CENTRAL JDP...", 
-                            "> VERIFICANDO ASSINATURA DA LICENÇA...", 
-                            "> ANALISANDO INTEGRIDADE DA CASCA...",
-                            "> ERRO DE ENDEREÇAMENTO DETECTADO!", 
-                            "> ESTA APLICAÇÃO NÃO ESTÁ AUTORIZADA NESTE SERVIDOR.",
-                            "> BLOQUEIO REMOTO INSTANTÂNEO ATIVADO PELO CRIADOR.", 
-                            "> ENVIANDO TRAJETÓRIA DE IP PARA O KERNEL HELENA..."
+                            "> CONSULTANDO BANCO DE DADOS DE USUÁRIOS...", 
+                            "> VERIFICANDO STATUS DA LICENÇA...",
+                            "> ERRO DE AUTORIZAÇÃO DETECTADO!", 
+                            "> SEU NÚMERO NÃO CONSTA COMO ATIVO NO ECOSSISTEMA JDP.",
+                            "> CONTATE O ADMINISTRADOR PARA LIBERAR SEU ACESSO."
                         ];
                         let l=0, c=0;
 
@@ -40,20 +100,32 @@
                         }
 
                         async function validar() {
-                            // Validação cirúrgica comparando apenas os hostnames puros
-                            if(window.location.hostname !== C.d && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') { 
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const userParam = urlParams.get('u');
+                            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+                            if(!isLocal && window.location.hostname !== C.d) { 
                                 type(); 
                                 return; 
                             }
+
                             try {
-                                const r = await fetch('https://raw.githubusercontent.com/pradodalapa-hue/Tetstserbidor/main/clientes.json?t='+Date.now());
-                                const d = await r.json();
-                                const u = d.find(i => i.id === C.id && i.apiKey === C.k);
-                                if(u && u.status === 'ativo') {
-                                    const r2 = await fetch('https://raw.githubusercontent.com/pradodalapa-hue/Tetstserbidor/main/' + u.path + 'payload.json');
+                                // ==========================================
+                                // BARREIRA DE SEGURANÇA 2: VERIFICAÇÃO DINÂMICA
+                                // ==========================================
+                                // Busca a lista de usuários autorizados no dados.json central
+                                const rDb = await fetch('https://raw.githubusercontent.com/pradodalapa-hue/Tetstserbidor/main/clientes/' + C.id + '/dados.json?t='+Date.now());
+                                const db = await rDb.json();
+                                
+                                // Se o número de telefone passado em ?u= estiver na lista do dados.json
+                                if(db.usuarios && db.usuarios.includes(userParam)) {
+                                    // Puxa o Payload descriptografado
+                                    const r2 = await fetch('https://raw.githubusercontent.com/pradodalapa-hue/Tetstserbidor/main/clientes/' + C.id + '/payload.json');
                                     const p = await r2.json();
                                     document.open(); document.write(decodeURIComponent(escape(atob(p.payload)))); document.close();
-                                } else { type(); }
+                                } else { 
+                                    type(); // Exibe erro e bloqueia se o número não existir no json
+                                }
                             } catch(e) { type(); }
                         }
                         if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
