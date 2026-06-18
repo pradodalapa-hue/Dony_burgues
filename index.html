@@ -2,154 +2,1279 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <link rel="manifest" href="manifest.json">
-    <title>SISTEMA JDP SECURE</title>
-    <style>
-        body { background:#020617; color:#fff; font-family:monospace; margin:0; overflow:hidden; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; }
-        #term { width:80%; text-align:left; font-size:18px; color:#06b6d4; text-shadow:0 0 5px #06b6d4; }
-        #muralha { display:none; text-align:center; animation: fadeIn 1.5s; }
-        .logo { width:150px; filter:drop-shadow(0 0 10px #fde047); margin-bottom:20px; }
-        .btn-w { display:inline-block; margin-top:20px; padding:15px 30px; background:#25d366; color:#fff; text-decoration:none; border-radius:5px; font-weight:bold; font-family:sans-serif; }
-        @keyframes fadeIn { from {opacity:0} to {opacity:1} }
-    </style>
-</head>
-<body>
-    <div id="term"></div>
-    <div id="muralha">
-        <img class="logo" src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1777000164292_icon_512_1_.png">
-        <h2 style="color:#fde047">ACESSO INDISPONÍVEL</h2>
-        <p>LICENÇA EXPIRADA OU PROBLEMA DE DIRETRIZ DE DOMÍNIO.</p>
-        <p>ESTE SISTEMA EXECUTARÁ APENAS EM: http://jdpsistemas.com.br/</p>
-        <a href="https://wa.me/5592984846058" class="btn-w">FALAR COM MESTRE JOSÉ</a>
-    </div>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dony Burgues</title>
+
+    <!-- ================================================================= -->
+    <!--  MÓDULO VIGIA CONTEXTUAL & AUTO-LOGIN UNIVERSAL JDP (0% ERROS)    -->
+    <!-- ================================================================= -->
     <script>
-        const C = { id:'DONY_BURGUERS_MAG', k:'RE9OWV9CVVJHVUVS', d:'jdpsistemas.com.br' };
-        const t = document.getElementById('term');
-        const m = document.getElementById('muralha');
-        
-        const msg = [
-            "> INICIALIZANDO MÁQUINA JDP v15.0 SUPREME...",
-            "> VERIFICANDO ALINHAMENTO DOS PISTÕES...",
-            "> CONECTANDO AO SERVIDOR DE LICENÇAS JDP...",
-            "> CONEXÃO ESTÁVEL DETECTADA OU CACHE ATIVO..."
-        ];
-        let l=0, c=0;
-
-        function type() {
-            if(l < msg.length) {
-                if(c < msg[l].length) { t.innerHTML += msg[l].charAt(c); c++; setTimeout(type, 15); }
-                else { t.innerHTML += "<br>"; l++; c=0; setTimeout(type, 200); }
-            } else {
-                setTimeout(() => { t.style.display='none'; m.style.display='block'; }, 800);
-            }
-        }
-
-        // MOTOR DE EXECUÇÃO SUPREMO ANTI-TELA-PRETA (TRI-REDUNDANTE)
-        function executarPayload(payloadBase64) {
-            try {
-                let htmlDecodificado;
-                try {
-                    // Método 1: UTF-8 Escape (Padrão de Alta Fidelidade)
-                    htmlDecodificado = decodeURIComponent(escape(atob(payloadBase64)));
-                } catch(err) {
-                    try {
-                        // Método 2: Decodificação Base64 Direta (Fallback)
-                        htmlDecodificado = atob(payloadBase64);
-                    } catch(err2) {
-                        // Método 3: Decodificação URI Pura
-                        htmlDecodificado = decodeURIComponent(payloadBase64);
-                    }
-                }
-                
-                document.open(); 
-                document.write(htmlDecodificado); 
-                document.close();
-                return true;
-            } catch(e) {
-                console.error("Erro Crítico de Injeção:", e);
-                return false;
-            }
-        }
-
-        async function validar() {
+        (function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const bypassJose = urlParams.get('senha') === 'PrincesaDiamante' || urlParams.get('key') === 'PrincesaDiamante';
-            
-            // Aceita o domínio mestre e qualquer subdomínio dele
-            const hostname = window.location.hostname;
-            const isDominioValido = hostname === C.d || hostname.endsWith('.' + C.d) || hostname === 'localhost' || hostname === '127.0.0.1';
+            const paramUser = (urlParams.get('user') || urlParams.get('nome') || urlParams.get('cliente') || "").toUpperCase().trim();
+            const localUser = (localStorage.getItem('jdp_cliente_nome') || "").toUpperCase().trim();
 
-            if(!bypassJose && !isDominioValido) {
-                 type();
-                 return;
+            if (paramUser.includes("JULIA") || localUser.includes("JULIA")) {
+                localStorage.setItem('jdp_cliente_nome', 'JULIA (CONTA MONITORADA)');
+                localStorage.setItem('jdp_cliente_whatsapp', '5592900000000');
+                localStorage.setItem('jdp_cliente_endereco', 'ACESSO DE TESTE VIGIA - AM');
+                if (urlParams.has('user') || urlParams.has('nome')) {
+                    window.location.href = window.location.pathname;
+                }
             }
+        })();
+    </script>
+    <!-- ================================================================= -->
+         
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-            const cacheLocal = localStorage.getItem('jdp_payload_' + C.id);
-            const statusLocal = localStorage.getItem('jdp_status_' + C.id);
+    <!-- COMPATIBILIDADE DOS MOTORES -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-            // CONTINGÊNCIA OFFLINE IMEDIATA
+    <style>
+        :root {
+            --jdp-gold: #f59e0b;
+            --jdp-gold-gradient: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+            --jdp-bg: #020305;
+            --jdp-glass: rgba(20, 22, 28, 0.95);
+            --carbon: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+        }
+
+        body {
+            background-color: var(--jdp-bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* TELA DE CARREGAMENTO SUPREME HELENA */
+        #loading-supreme {
+            position: fixed; 
+            inset: 0; 
+            background: #020617;
+            z-index: 99999; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center;
+        }
+
+        /* RODA COLORIDA JDP */
+        .spinner-supreme {
+            width: 20px;
+            height: 20px;
+            margin-top: 25px;
+            border: 5px solid transparent;
+            border-top: 5px solid #22c55e; /* Verde */
+            border-right: 5px solid #eab308; /* Amarelo */
+            border-bottom: 5px solid #3b82f6; /* Azul */
+            border-left: 5px solid #a855f7; /* Lilás */
+            border-radius: 50%;
+            animation: spin-supreme 1s linear infinite;
+        }
+
+        @keyframes spin-supreme {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse { 
+            0%, 100% { opacity: 0.4; } 
+            50% { opacity: 1; } 
+        }
+
+        .resplendor-ouro {
+            font-size: 28px; 
+            font-weight: 900; 
+            text-align: center;
+            background: var(--jdp-gold-gradient);
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(253, 224, 71, 0.4));
+            letter-spacing: 2px;
+        }
+
+        .gold-text {
+            color: #fde047;
+            text-shadow: 0 0 12px rgba(253, 224, 71, 0.4);
+        }
+
+        .cyan-glow {
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+            border: 1px solid #06b6d4;
+        }
+
+        .slider-container {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            border-radius: 20px;
+            height: 190px;
+            margin-top: 10px;
+            border: 1px solid #1e293b;
+        }
+
+        .slider-track {
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            height: 100%;
+        }
+
+        .slide {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-item {
+            transition: 0.3s;
+            white-space: nowrap;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .category-active {
+            color: #06b6d4;
+            border-bottom: 2px solid #06b6d4;
+            text-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
+        }
+
+        /* VITRINE DE PRODUTOS JDP */
+        .grid-vendas { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px; 
+        }
+
+        .card-venda {
+            position: relative;
+            width: 100%;
+            height: 250px; 
+            background-color: #000000 !important;
+            border: 1px solid #333;
+            border-radius: 15px; 
+            overflow: hidden; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .card-venda:hover {
+            border-color: #06b6d4;
+        }
+
+        /* IMAGEM SEM INTERAÇÃO DIRETA (PROTEGIDA) */
+        .card-venda img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain !important; 
+            background: #000000 !important; 
+            padding: 0; 
+            pointer-events: none; /* Impede arrastar e cliques diretos */
+            -webkit-user-drag: none;
+        }
+
+        /* CAMADA DE VIDRO BLINDADA CONTRA CÓPIA JDP */
+        .glass-shield {
+            position: absolute;
+            inset: 0;
+            background: transparent;
+            z-index: 3; /* Acima da Imagem e abaixo das informações se necessário */
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none; /* Bloqueia menu salvar no iOS */
+        }
+
+        .card-info { 
+            position: absolute; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0)) !important; 
+            padding: 8px 5px; 
+            text-align: center; 
+            z-index: 4; /* Acima do escudo de vidro */
+        }
+
+        .card-info .nome-produto { 
+            font-size: 11px; 
+            color: #888 !important; 
+            text-transform: uppercase; 
+            margin-bottom: 2px; 
+            font-weight: 700; 
+            letter-spacing: 0.5px;
+        }
+
+        .card-info .price { 
+            font-weight: 900; 
+            font-size: 1.1rem; 
+            background: var(--jdp-gold-gradient); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            display: inline-block;
+        }
+
+        .badge-qtd { 
+            position: absolute; 
+            top: 5px; 
+            right: 5px; 
+            background: var(--jdp-gold); 
+            color: #000; 
+            padding: 2px 8px; 
+            border-radius: 5px; 
+            font-weight: 900; 
+            font-size: 12px; 
+            z-index: 5; /* No topo absoluto */
+        }
+
+        .bottom-nav {
+            background: rgba(2, 6, 23, 0.95);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid #1e293b;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            z-index: 100;
+        }
+
+        .btn-flutuante {
+            position: fixed;
+            right: 20px;
+            width: 52px;
+            height: 52px;
+            z-index: 999;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #06b6d4;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #020617;
+        }
+
+        #btn-Chat { bottom: 210px; animation: pulsar-invisivel 4s infinite ease-in-out; }
+        #btn-Jogo { bottom: 145px; border-color: #fde047; box-shadow: 0 0 15px rgba(253, 224, 71, 0.4); }
+        #btn-logo { bottom: 80px; }
+                                                  
+        @keyframes pulsar-invisivel {
+            0%, 100% { opacity: 0; transform: scale(0.8); }
+            20%, 80% { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-industrial {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(2,6,23,0.95);
+            z-index: 10000;
+            padding: 20px;
+            overflow-y: auto;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .recibo-area {
+            background: #000000;
+            border: 2px solid #06b6d4;
+            width: 100%;
+            max-width: 350px;
+            padding: 25px;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .recibo-area::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: repeating-linear-gradient(90deg, #06b6d4, #06b6d4 10px, transparent 10px, transparent 20px);
+        }
+
+        .auth-tab {
+            cursor: pointer;
+            padding: 10px;
+            font-weight: 900;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+    </style>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#bf953f">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" sizes="192x192" href="icon-192.png">
+    <link rel="icon" sizes="512x512" href="icon-512.png">
+    <link class="apple-touch-icon" href="icon-192.png">
+</head>
+<body class="pb-28" oncontextmenu="return false;"> <!-- Desativa clique direito global -->
+
+    <!-- TELA DE CARREGAMENTO SUPREME (RODA COLORIDA JDP) -->
+    <div id="loading-supreme">
+        <div class="resplendor-ouro">DONY BURGUERS</div>
+        <div id="loading-status-text" style="margin-top: 12px; color: #fde047; font-size: 10px; font-weight: 800; letter-spacing: 2px; animation: pulse 1.5s infinite;">CARREGANDO NAVE...</div>
+        <div class="spinner-supreme"></div>
+    </div>
+
+    <!-- MOTOR DE CADASTRO / LOGIN UNIFICADO COM DUAL-TAB JDP -->
+    <div id="modal-cadastro" class="modal-industrial">
+        <div class="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 w-full max-w-[320px] cyan-glow">
+            <h2 class="gold-text font-black mb-1 italic tracking-wider text-center text-sm">DONY BURGUER'S</h2>
+            <p class="text-[9px] text-slate-400 text-center mb-4 uppercase tracking-widest">Acesso de Operador JDP</p>
+                                                                          
+            <!-- ABAS DE SELEÇÃO (LOGIN / CADASTRO) -->
+            <div class="flex border-b border-slate-800 mb-4 text-center">
+                <div id="btn-tab-login" onclick="alternarAbaAuth('login')" class="flex-1 auth-tab text-[#fde047] border-b-2 border-[#fde047]">
+                    Entrar
+                </div>
+                <div id="btn-tab-cadastro" onclick="alternarAbaAuth('cadastro')" class="flex-1 auth-tab text-slate-500">
+                    Cadastrar
+                </div>
+            </div>
+
+            <!-- VIEW 1: ENTRAR -->
+            <div id="auth-login-view" class="space-y-1">
+                <p class="text-[10px] text-slate-400 text-center mb-2">Digite seu WhatsApp para recuperar seus dados.</p>
+                <input type="tel" id="login-whatsapp" placeholder="Ex: 5592984846058" class="w-full text-center bg-slate-950 border border-slate-800 rounded-xl py-2 text-white text-xs">
+                <button onclick="realizarLoginLocal()" class="w-full bg-[#06b6d4] text-black font-black py-3 rounded-xl uppercase text-xs tracking-wider transition hover:opacity-90 mt-2">
+                    Entrar no Cockpit
+                </button>
+            </div>
+
+            <!-- VIEW 2: CADASTRAR -->
+            <div id="auth-cadastro-view" class="space-y-1 hidden">
+                <input type="text" id="cad-nome" placeholder="NOME COMPLETO" class="w-full text-center uppercase bg-slate-950 border border-slate-800 rounded-xl py-2 text-white text-xs mb-1">
+                <input type="tel" id="cad-whatsapp" placeholder="WHATSAPP COM DDD" class="w-full text-center bg-slate-950 border border-slate-800 rounded-xl py-2 text-white text-xs mb-1">
+                <input type="text" id="cad-endereco" placeholder="ENDEREÇO COMPLETO" class="w-full text-center uppercase bg-slate-950 border border-slate-800 rounded-xl py-2 text-white text-xs">
+                <button id="btn-cadastrar-trigger" onclick="salvarCadastroLocal()" class="w-full bg-[#fde047] text-black font-black py-3 rounded-xl uppercase text-xs tracking-wider transition hover:opacity-90 mt-2">
+                    Criar Conta & Ganhar 10 DonyCoins
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAINEL DE MISSÕES -->
+    <div id="modal-missoes" class="modal-industrial">
+        <div class="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 w-full max-w-[340px] cyan-glow">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-cyan-400 font-black italic tracking-wider text-sm">MISSÕES JDP</h2>
+                <button onclick="fecharMissoes()" class="text-slate-400 text-xs">FECHAR X</button>
+            </div>
+            <p class="text-[11px] text-slate-400 mb-4">Complete tarefas para acumular DonyCoins que valem dinheiro real no fechamento do seu pedido!</p>
+                                                                          
+            <div class="space-y-3">
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+                    <div>
+                        <p class="text-xs font-bold text-white">Reivindicação Diária</p>
+                        <p class="text-[9px] text-slate-400">Ganhe moedas a cada 24 horas</p>
+                    </div>
+                    <button id="btn-missao-diaria" onclick="reivindicarDiario()" class="bg-[#fde047] text-black font-black text-[10px] px-3 py-1.5 rounded uppercase">Resgatar +5</button>
+                </div>
+                                                                                                  
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+                    <div>
+                        <p class="text-xs font-bold text-white">Seguir Canal do Criador</p>
+                        <p class="text-[9px] text-slate-400">Apoie a engenharia de elite</p>
+                    </div>
+                    <button id="btn-missao-seguir" onclick="completarMissaoRede(10)" class="bg-cyan-500 text-black font-black text-[10px] px-3 py-1.5 rounded uppercase">Seguir +10</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MOTOR DO RECIBO SUPREME -->
+    <div id="modal-supreme" class="modal-industrial">
+        <div class="flex flex-col items-center gap-4 w-full">
+            <div id="print-area" class="recibo-area">
+                <div class="text-center mb-4">
+                    <img id="img-motor-comprovante" src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780391398310_1776103715509.png" class="w-16 h-16 mx-auto mb-2 rounded-full border-2 border-[#06b6d4] object-cover">
+                    <h2 class="font-black text-base tracking-widest text-[#fde047]">DONY BURGUER'S</h2>
+                    <p class="text-[9px] text-slate-400"> JDP TECNOLOGIA INDUSTRIAL</p>
+                    <p class="text-[10px] font-bold text-cyan-400 mt-1" id="id-pedido-display">ID: #00000</p>
+                </div>
+                                                                                                  
+                <div class="border-t border-dashed border-slate-700 my-3"></div>
+                                                                                                  
+                <div id="comp-itens-list" class="text-[11px] space-y-1.5"></div>
+                                                                                                  
+                <div class="border-t border-dashed border-slate-700 my-3"></div>
+                                                                                                  
+                <div class="flex justify-between items-center text-[11px]">
+                    <span class="text-slate-400 font-bold">VALOR DOS PRODUTOS:</span>
+                    <span class="text-white" id="comp-subtotal">R$ 0,00</span>
+                </div>
+                <div id="comp-desconto-row" class="flex justify-between items-center text-[11px] text-red-400 hidden">
+                    <span class="font-bold">DESCONTO DONYCOINS:</span>
+                    <span id="comp-desconto">-R$ 0,00</span>
+                </div>
+                <div class="flex justify-between items-center mt-1">
+                    <span class="text-[11px] text-slate-300 font-bold">TOTAL A PAGAR:</span>
+                    <span class="text-xs font-black text-[#fde047]" id="comp-total">R$ 0,00</span>
+                </div>
+
+                <div class="border-t border-dashed border-slate-700 my-3"></div>
+                                                                                                  
+                <div class="text-[10px] uppercase space-y-1 text-slate-300">
+                    <p><strong class="text-cyan-400">CLIENTE:</strong> <span id="comp-cliente-nome"></span></p>
+                    <p><strong class="text-cyan-400">CONTATO:</strong> <span id="comp-cliente-phone"></span></p>
+                    <p><strong class="text-cyan-400">ENTREGA:</strong> <span id="comp-cliente-end"></span></p>
+                </div>
+                                                                                                  
+                <div class="border-t border-dashed border-slate-700 my-3"></div>
+                                                                                                  
+                <div class="text-center italic text-[10px] text-[#fde047] font-bold py-1" id="txt-evangelico"></div>
+                                                                                                  
+                <p class="text-[8px] text-center mt-2 text-slate-500 font-mono" id="data-recibo"></p>
+                <div class="text-[7px] text-center text-cyan-500/50 mt-1">AUTENTICAÇÃO PROTOCOLO JDP-PX</div>
+            </div>
+
+            <button id="btn-envio-final" onclick="processarSaidaIndustrial()" class="w-full max-w-[350px] bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-xl uppercase flex items-center justify-center gap-2 tracking-widest text-xs transition">
+                <i class="fab fa-whatsapp"></i> ENVIAR PEDIDO AO WHATSAPP
+            </button>
+            <button onclick="fecharModalRecibo()" class="text-slate-400 hover:text-white text-xs font-bold tracking-widest uppercase">CANCELAR</button>
+        </div>
+    </div>
+
+    <!-- HEADER (BLINDADO CONTRA DESALINHAMENTO) -->
+    <header class="p-4 flex justify-between items-center sticky top-0 bg-[#020617] z-50 border-b border-slate-900 gap-2">
+        <!-- LADO ESQUERDO: MENU E TÍTULO -->
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div class="relative inline-block text-left flex-shrink-0">
+                <button onclick="toggleMenu()" class="text-slate-400 hover:text-cyan-400 text-lg p-1 focus:outline-none">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div id="dropdown-menu" class="hidden absolute left-0 mt-2 w-32 rounded-xl bg-[#0f172a] border border-[#06b6d4]/40 shadow-xl py-1 z-[6000]">
+                    <button onclick="deslogarSistema()" class="w-full text-left px-4 py-2.5 text-xs font-black text-red-400 hover:bg-slate-900 flex items-center gap-2">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </button>
+                </div>
+            </div>
+
+            <div class="min-w-0">
+                <h1 class="text-sm sm:text-xl font-black italic tracking-wider sm:tracking-widest text-[#fde047] truncate">DONY BURGUER'S</h1>
+                <p class="text-[7px] sm:text-[8px] text-cyan-500 tracking-wider truncate">INDUSTRIAL PLATFORM</p>
+            </div>
+        </div>
+                                                  
+        <!-- LADO DIREITO: MOEDAS E CARRINHO (BLOQUEADOS CONTRA EXPULSÃO) -->
+        <div class="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+            <!-- CAIXA DE MOEDAS OTIMIZADA COM FORMATO PADRÃO R$ 99,01 -->
+            <div onclick="abrirMissoes()" class="flex items-center gap-1 bg-slate-900 px-2.5 py-1.5 rounded-full border border-slate-800 cursor-pointer hover:border-[#fde047] transition flex-shrink-0">
+                <i class="fas fa-coins text-[10px] sm:text-[11px] text-[#fde047]"></i>
+                <span id="coin-count" class="text-[10px] sm:text-xs font-black text-white">R$ 0,00</span>
+            </div>
+
+            <!-- BOTÃO DO CARRINHO ESTÁVEL -->
+            <div onclick="toggleCartScreen()" class="relative bg-slate-900 p-2 sm:p-2.5 rounded-xl border border-slate-800 cursor-pointer flex-shrink-0">
+                🛒 <span id="cart-count" class="absolute -top-1 -right-1 bg-cyan-500 text-[8px] sm:text-[9px] w-4 sm:w-4.5 h-4 sm:h-4.5 flex items-center justify-center rounded-full text-black font-black">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- TELA DO CARRINHO -->
+    <div id="cart-screen" class="hidden fixed inset-0 z-[5000] bg-[#020617] p-5 overflow-y-auto">
+        <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
+            <h2 class="text-[#fde047] font-black italic tracking-wider">MEU PEDIDO</h2>
+            <button onclick="toggleCartScreen()" class="text-slate-400 font-bold uppercase text-xs">VOLTAR</button>
+        </div>
+        <div id="cart-items-list" class="space-y-3 mb-6"></div>
+                                                  
+        <!-- SELEÇÃO DE DESCONTO DONYCOINS -->
+        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 mb-4 flex justify-between items-center">
+            <div>
+                <p class="text-xs font-bold text-white">Pagar com DonyCoins?</p>
+                <p class="text-[9px] text-slate-400">Saldo disponível: <span id="checkout-coin-balance" class="text-[#fde047] font-bold">R$ 0,00</span></p>
+            </div>
+            <input type="checkbox" id="usar-donycoins" onchange="calcularPrecoFinal()" class="w-6 h-6 rounded border-slate-700 bg-slate-800 accent-cyan-500 cursor-pointer flex-shrink-0">
+        </div>
+
+        <div class="bg-[#0f172a] p-5 rounded-2xl border border-slate-900 cyan-glow">
+            <p id="cart-total" class="text-xl font-black text-white mb-4">TOTAL: R$ 0,00</p>
+            <button onclick="verificarFluxoCadastro()" class="w-full bg-[#fde047] text-black font-black py-4 rounded-xl uppercase text-xs tracking-widest">
+                Gerar Comprovante
+            </button>
+        </div>
+    </div>
+
+    <!-- PRINCIPAL -->
+    <main class="px-4">
+        <div class="slider-container">
+            <div id="sliderTrack" class="slider-track"></div>
+        </div>
+
+        <!-- BOTÕES FLUTUANTES DIRECIONAIS -->
+        <a id="btn-logo" class="btn-flutuante" target="_blank">
+            <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780390549433_IMG_20260602_WA0019.jpg" class="rounded-full w-10 h-10 object-cover">
+        </a>
+        <a id="btn-Jogo" class="btn-flutuante" target="_blank">
+            <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/media/jdp_1780390793766_op.gif" class="rounded-full w-10 h-10 object-cover">
+        </a>
+        <a id="btn-Chat" class="btn-flutuante">
+            <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780281835705______.gif" class="rounded-full w-10 h-10 object-cover">
+        </a>
+
+        <!-- CATEGORIAS -->
+        <div class="flex gap-7 overflow-x-auto py-8 no-scrollbar">
+            <span class="category-item category-active" id="cat-todos" onclick="filterCategory('todos', this)">Todos</span>
+            <span class="category-item" id="cat-burguer" onclick="filterCategory('burguer', this)">Burguers</span>
+            <span class="category-item" id="cat-bebida" onclick="filterCategory('bebida', this)">Bebidas</span>
+            <span class="category-item" id="cat-combo" onclick="filterCategory('combo', this)">Combos</span>
+        </div>
+
+        <!-- VITRINE DE PRODUTOS JDP EXATA -->
+        <div id="product-grid" class="grid-vendas text-slate-100"></div>
+    </main>
+
+    <!-- BOTTOM BAR -->
+    <nav class="bottom-nav">
+        <div onclick="location.reload()" class="flex flex-col items-center text-cyan-400 cursor-pointer">
+            <span class="text-xl">🏠</span>
+            <span class="text-[9px] font-black uppercase mt-1">Início</span>
+        </div>
+        <div onclick="toggleCartScreen()" class="flex flex-col items-center text-slate-500 cursor-pointer">
+            <span class="text-xl">🛒</span>
+            <span class="text-[9px] font-black uppercase mt-1">Carrinho</span>
+        </div>
+        <div onclick="abrirPagamentoPix()" class="flex flex-col items-center text-slate-500 cursor-pointer">
+            <span class="text-xl">⚡</span>
+            <span class="text-[9px] font-black uppercase mt-1 text-cyan-400">PAGAMENTO PIX</span>
+        </div>
+    </nav>
+
+    <!-- MODAL DE DETALHES -->
+    <div id="product-modal" class="hidden fixed inset-0 z-[4000] bg-slate-950/95 backdrop-blur-md p-5 flex flex-col justify-center">
+        <button onclick="closeModal()" class="absolute top-5 right-5 text-slate-500 font-bold text-sm tracking-wider">FECHAR X</button>
+        <div class="flex flex-col gap-4 max-w-sm mx-auto w-full relative">
+            <!-- Glass Shield no Modal de Detalhes também para blindagem total -->
+            <div class="glass-shield rounded-2xl"></div>
+            <img id="modal-img" src="" class="w-full h-64 object-contain bg-black rounded-2xl border border-slate-800 cyan-glow">
+            <h2 id="modal-nome" class="text-2xl font-black text-white italic"></h2>
+            <p id="modal-preco" class="text-xl font-black text-[#fde047]"></p>
+            <button onclick="handleAddToCartFromModal()" style="position: relative; z-index: 10;" class="mt-4 bg-[#fde047] text-black font-black py-4 rounded-xl uppercase text-xs tracking-widest transition hover:opacity-95">
+                Adicionar ao Carrinho
+            </button>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE INTELIGÊNCIA UNIFICADO COM DONYBANK LEDGER INTEGRATION -->
+    <script>
+        const LOJA_ID = "LEOVARDIOS_burguer_2026";
+        const CHIP_DESTINO = "5592984846058";
+        const LEDGER_PATH = `lojas/${LOJA_ID}/DonyCoins/ledger`;
+        const MASTER_TETO = 1000;
+
+        const firebaseConfig = { 
+             apiKey: "AIzaSyCEdXF7ScnMYz0Ce0OW-B_UJ8Bm5Pl9m8o",
+             databaseURL: "https://dony-burguers-default-rtdb.firebaseio.com"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const FOTO_ERRO = "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1777445586772_1776103643639.png";
+        const frases = [
+            "O SENHOR É MEU PASTOR, NADA ME FALTARÁ.", 
+            "TUDO POSSO NAQUELE QUE ME FORTALECE.", 
+            "DEUS É FIEL E JUSTO.", 
+            "A PAZ DO SENHOR JESUS ESTEJA COM VOCÊ."
+        ];
+
+        let produtosFirebase = [];
+        let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+        let idPedidoAtual = "";
+        let donycoinsUsuario = 0;
+        let subtotalPedido = 0;
+        let valorDesconto = 0;
+        let totalComDesconto = 0;
+        let totalCirculanteGlobal = 0;
+        let linkPagamentoPix = "";
+        let categoriaAtiva = "todos";
+
+        const bannerData = [
+            { img: "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780392132065_IMG_20260602_WA0022.jpg", text: "DONY BURGUER - DESDE 2017" },
+            { img: "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780391861855_IMG_20260602_WA0023.jpg", text: "COMBOS EXCLUSIVOS JDP" },
+            { img: "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780391861855_IMG_20260602_WA0023.jpg", text: "COMBOS EXCLUSIVOS JDP" }
+        ];
+
+        function monitorarConexao() {
+            const statusTxt = document.getElementById('loading-status-text');
+            const loader = document.getElementById('loading-supreme');
+
             if (!navigator.onLine) {
-                if (cacheLocal && statusLocal === 'ativo') {
-                    executarPayload(cacheLocal);
-                    return;
-                } else {
-                    type();
-                    return;
-                }
-            }
-            
-            // SE ESTIVER ONLINE: Sincroniza com o GitHub do Criador
-            try {
-                const r = await fetch('https://raw.githubusercontent.com/pradodalapa-hue/Tetstserbidor/main/clientes.json?t='+Date.now(), { cache: 'no-store' });
-                const d = await r.json();
-                const u = d.find(i => i.id === C.id);
-                
-                if(u && u.status === 'ativo') {
-                    const r2 = await fetch('https://raw.githubusercontent.com/pradodalapa-hue/Tetstserbidor/main/' + u.path + 'payload.json?t='+Date.now(), { cache: 'no-store' });
-                    const p = await r2.json();
-                    
-                    // Alimenta o cofre de persistência local
-                    localStorage.setItem('jdp_payload_' + C.id, p.payload);
-                    localStorage.setItem('jdp_status_' + C.id, 'ativo');
-                    
-                    executarPayload(p.payload);
-                } else {
-                    // Revoga acessos locais se o status for alterado no repositório
-                    localStorage.removeItem('jdp_payload_' + C.id);
-                    localStorage.removeItem('jdp_status_' + C.id);
-                    type();
-                }
-            } catch(e) { 
-                // Se houver oscilação de rede durante a requisição, usa o cache local
-                if (cacheLocal && statusLocal === 'ativo') {
-                    executarPayload(cacheLocal);
-                } else {
-                    type(); 
-                }
+                statusTxt.innerText = "SEM CONEXÃO - AGUARDANDO REDE...";
+                statusTxt.style.color = "#ef4444";
+                statusTxt.style.animation = "pulse 0.8s infinite";
+                loader.style.display = 'flex';
+            } else {
+                statusTxt.innerText = "SINCRONIZANDO NAVE...";
+                statusTxt.style.color = "#fde047";
+                statusTxt.style.animation = "pulse 1.5s infinite";
             }
         }
 
-        // HEARTBEAT DE VERIFICAÇÃO EM TEMPO REAL (A cada 5 segundos)
-        setInterval(() => {
-            if (navigator.onLine) {
-                fetch('https://raw.githubusercontent.com/pradodalapa-hue/Tetstserbidor/main/clientes.json?t='+Date.now(), { cache: 'no-store' })
-                .then(r => r.json())
-                .then(d => {
-                    const u = d.find(i => i.id === C.id);
-                    if (u && u.status === 'ativo') {
-                        localStorage.setItem('jdp_status_' + C.id, 'ativo');
-                    } else {
-                        localStorage.removeItem('jdp_payload_' + C.id);
-                        localStorage.removeItem('jdp_status_' + C.id);
-                        window.location.reload();
-                    }
-                }).catch(e => {});
-            }
-        }, 5000);
+        window.addEventListener('online', monitorarConexao);
+        window.addEventListener('offline', monitorarConexao);
 
-        if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-        validar();
+        window.onload = () => {
+            monitorarConexao();
+
+            const nomeSalvo = localStorage.getItem('jdp_cliente_nome');
+            const whatsSalvo = localStorage.getItem('jdp_cliente_whatsapp');
+
+            if (nomeSalvo && whatsSalvo) {
+                document.getElementById('modal-cadastro').style.display = 'none';
+                vincularUsuarioFirebase(whatsSalvo);
+            } else {
+                document.getElementById('modal-cadastro').style.display = 'flex';
+                alternarAbaAuth('login');
+            }
+
+            db.ref('lojas/' + LOJA_ID + '/cardapio').on('value', snap => {
+                const data = snap.val();
+                produtosFirebase = data ? Object.entries(data).map(([id, val]) => ({ id, ...val })) : [];
+                renderGrid(categoriaAtiva);
+                                              
+                if (navigator.onLine) {
+                    setTimeout(() => {
+                        document.getElementById('loading-supreme').style.display = 'none';
+                    }, 3000);
+                }
+            });
+
+            db.ref(`lojas/${LOJA_ID}/config_motor_recibo`).on('value', snap => {
+                const link = snap.val();
+                if(link) {
+                    document.getElementById('img-motor-comprovante').src = link;
+                }
+            });
+
+            db.ref(`lojas/${LOJA_ID}/config_pix_link`).on('value', snap => {
+                const link = snap.val();
+                if(link) {
+                    linkPagamentoPix = link;
+                }
+            });
+
+            db.ref(LEDGER_PATH).on('value', snap => {
+                const ledger = snap.val() || {};
+                totalCirculanteGlobal = 0;
+                Object.values(ledger).forEach(b => {
+                    if (b.type === "EMISSAO" || b.type === "RECOMPENSA") {
+                        totalCirculanteGlobal += b.amount;
+                    } else if (b.type === "DEBITO" || b.type === "COMPRA") {
+                        totalCirculanteGlobal -= b.amount;
+                    }
+                });
+                monitorarRestricaoTeto();
+            });
+
+            renderBanners();
+            startBannerRotation();
+            atualizarLinksComUsuario();
+            updateCartUI();
+        };
+
+        async function gerarHashBloco(index, timestamp, sender, receiver, amount, prevHash) {
+            const blockData = `${index}-${timestamp}-${sender}-${receiver}-${amount}-${prevHash}`;
+            const msgBuffer = new TextEncoder().encode(blockData);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function registrarTransacaoLedgerCliente(sender, receiver, amount, type, reason) {
+            const snap = await db.ref(LEDGER_PATH).get();
+            const ledger = snap.val() || {};
+            const index = Object.keys(ledger).length;
+
+            if (type === "EMISSAO" || type === "RECOMPENSA") {
+                if (totalCirculanteGlobal + amount > MASTER_TETO) {
+                    alert("LIMITE EXCEDIDO: O DonyBank atingiu o teto de 1000 moedas em circulação.");
+                    throw new Error("TETO_EXCEDIDO");
+                }
+            }
+
+            const prevBlock = ledger[index - 1] || { hash: "00000000000000000000000000000000" };
+            const timestamp = Date.now();
+            const hash = await gerarHashBloco(index, timestamp, sender, receiver, amount, prevBlock.hash);
+
+            const novoBloco = {
+                index,
+                timestamp,
+                sender,
+                receiver,
+                amount,
+                type,
+                reason,
+                prevHash: prevBlock.hash,
+                hash
+            };
+
+            await db.ref(`${LEDGER_PATH}/${index}`).set(novoBloco);
+            return novoBloco;
+        }
+
+        function monitorarRestricaoTeto() {
+            const btnDiario = document.getElementById('btn-missao-diaria');
+            const btnSeguir = document.getElementById('btn-missao-seguir');
+
+            if (totalCirculanteGlobal >= MASTER_TETO) {
+                if(btnDiario) btnDiario.disabled = true;
+                if(btnSeguir) btnSeguir.disabled = true;
+                if(btnDiario) btnDiario.innerText = "TETO EXCEDIDO";
+                if(btnSeguir) btnSeguir.innerText = "TETO EXCEDIDO";
+            } else {
+                if(btnDiario) btnDiario.disabled = false;
+                if(btnSeguir) btnSeguir.disabled = false;
+            }
+        }
+
+        async function salvarCadastroLocal() {
+            const n = document.getElementById('cad-nome').value.trim();
+            const w = document.getElementById('cad-whatsapp').value.replace(/\D/g, "");
+            const e = document.getElementById('cad-endereco').value.trim();
+
+            if (!n || !w || !e) return alert("PREENCHA TODOS OS CAMPOS!");
+
+            localStorage.setItem('jdp_cliente_nome', n);
+            localStorage.setItem('jdp_cliente_whatsapp', w);
+            localStorage.setItem('jdp_cliente_endereco', e);
+
+            db.ref(`lojas/${LOJA_ID}/usuarios/${w}`).get().then(async (snap) => {
+                if (!snap.exists()) {
+                    try {
+                        await registrarTransacaoLedgerCliente("CRIADOR_JDP", w, 10, "RECOMPENSA", "BÔNUS DE BOAS-VINDAS");
+                                                                                                                          
+                        await db.ref(`lojas/${LOJA_ID}/usuarios/${w}`).set({
+                            nome: n.toUpperCase(),
+                            whatsapp: w,
+                            endereco: e.toUpperCase(),
+                            donycoins: 10,
+                            status_cadastro: "aprovado",
+                            data_cadastro: Date.now()
+                        });
+                    } catch (err) {
+                        await db.ref(`lojas/${LOJA_ID}/usuarios/${w}`).set({
+                            nome: n.toUpperCase(),
+                            whatsapp: w,
+                            endereco: e.toUpperCase(),
+                            donycoins: 0,
+                            status_cadastro: "aprovado",
+                            data_cadastro: Date.now()
+                        });
+                        alert("CONTA ATIVADA! O banco atingiu o teto de 1000 moedas, sua conta iniciou com 0 DonyCoins.");
+                    }
+                }
+                vincularUsuarioFirebase(w);
+                document.getElementById('modal-cadastro').style.display = 'none';
+            });
+        }
+
+        async function reivindicarDiario() {
+            const whats = localStorage.getItem('jdp_cliente_whatsapp');
+            const ultimaReivindicacao = localStorage.getItem('jdp_last_claim') || 0;
+            const agora = Date.now();
+
+            if (agora - ultimaReivindicacao < 24 * 60 * 60 * 1000) {
+                const horasRestantes = Math.ceil((24 * 60 * 60 * 1000 - (agora - ultimaReivindicacao)) / (1000 * 60 * 60));
+                return alert(`Aguarde mais ${horasRestantes} horas para resgatar novamente!`);
+            }
+
+            try {
+                await registrarTransacaoLedgerCliente("CRIADOR_JDP", whats, 5, "RECOMPENSA", "REIVINDICAÇÃO DIÁRIA");
+                                                                                  
+                db.ref(`lojas/${LOJA_ID}/usuarios/${whats}/donycoins`).set(donycoinsUsuario + 5).then(() => {
+                    localStorage.setItem('jdp_last_claim', agora);
+                    alert("SUCESSO! +5 DONYCOINS ADICIONADOS AO LIVRO-RAZÃO!");
+                });
+            } catch (err) {
+                alert("Erro ao resgatar moedas. Teto do banco atingido.");
+            }
+        }
+
+        async function completarMissaoRede(moedas) {
+            const whats = localStorage.getItem('jdp_cliente_whatsapp');
+            try {
+                await registrarTransacaoLedgerCliente("CRIADOR_JDP", whats, moedas, "RECOMPENSA", "MISSÃO SEGUIR CRIADOR JDP");
+                                                                                  
+                db.ref(`lojas/${LOJA_ID}/usuarios/${whats}/donycoins`).set(donycoinsUsuario + moedas).then(() => {
+                    window.open("https://pradodalapa-hue.github.io/JDPSistemasStatusrtyss688jfdssyiihfd/?u=" + whats, "_blank");
+                    alert(`OBRIGADO POR SEGUIR! +${moedas} DONYCOINS ADICIONADAS AO LIVRO-RAZÃO.`);
+                });
+            } catch (err) {
+                alert("Erro ao resgatar recompensa. Teto do banco atingido.");
+            }
+        }
+
+        function abrirPagamentoPix() {
+            const whats = localStorage.getItem('jdp_cliente_whatsapp');
+            if (!whats) {
+                alert("SISTEMA JDP: Por favor, faça login ou crie sua conta para acessar o Pagamento PIX.");
+                document.getElementById('modal-cadastro').style.display = 'flex';
+                alternarAbaAuth('login');
+                return;
+            }
+
+            if (linkPagamentoPix && linkPagamentoPix.trim() !== "") {
+                let urlFinal;
+                try {
+                    const urlObj = new URL(linkPagamentoPix);
+                    urlObj.searchParams.set('u', whats);
+                    urlObj.searchParams.set('origem', 'whatsapp');
+                    urlFinal = urlObj.toString();
+                } catch (e) {
+                    const separator = linkPagamentoPix.includes('?') ? '&' : '?';
+                    urlFinal = `${linkPagamentoPix}${separator}u=${whats}&origem=whatsapp`;
+                }
+                window.open(urlFinal, "_blank");
+            } else {
+                alert("HELENA: O link de pagamento PIX ainda não foi configurado pelo Criador no painel de administração.");
+            }
+        }
+
+        async function processarSaidaIndustrial() {
+            const btn = document.getElementById('btn-envio-final');
+            btn.innerHTML = "DISPARANDO SISTEMAS...";
+            btn.disabled = true;
+
+            const nomeCliente = localStorage.getItem('jdp_cliente_nome');
+            const endCliente = localStorage.getItem('jdp_cliente_endereco');
+            const whatsCliente = localStorage.getItem('jdp_cliente_whatsapp');
+
+            const dadosPedidoFirebase = {
+                id_protocolo: idPedidoAtual,
+                mesa: `DELIVERY: ${nomeCliente.toUpperCase()}`,
+                status: "Pendente",
+                subtotal: subtotalPedido,
+                desconto_aplicado: valorDesconto,
+                total: totalComDesconto,
+                timestamp: Date.now(),
+                itens: carrinho,
+                giro_usado: false,
+                validado_pdv: false
+            };
+
+            try {
+                if (valorDesconto > 0) {
+                    await registrarTransacaoLedgerCliente(whatsCliente, "CRIADOR_JDP", valorDesconto, "COMPRA", `DESCONTO COMPRA PEDIDO #${idPedidoAtual}`);
+                }
+
+                await db.ref(`lojas/${LOJA_ID}/producao_pendente/${idPedidoAtual}`).set(dadosPedidoFirebase);
+                await db.ref(`lojas/${LOJA_ID}/rastreio_ativo/${idPedidoAtual}`).set(dadosPedidoFirebase);
+
+                const novoSaldo = donycoinsUsuario - valorDesconto;
+                await db.ref(`lojas/${LOJA_ID}/usuarios/${whatsCliente}/donycoins`).set(novoSaldo);
+
+                const canvas = await html2canvas(document.getElementById('print-area'), {
+                    backgroundColor: "#000000",
+                    scale: 2,
+                    useCORS: true
+                });
+                                                                                                                      
+                const imgData = canvas.toDataURL("image/png");
+
+                let msg = `*🆔 ID DO PEDIDO: #${idPedidoAtual}*\n`;
+                msg += `------------------------------------------\n\n`;
+                msg += `*🔥 DETALHES DO PEDIDO*\n`;
+                msg += `👤 *CLIENTE:* ${nomeCliente.toUpperCase()}\n`;
+                msg += `📍 *LOCAL:* ${endCliente.toUpperCase()}\n\n`;
+                carrinho.forEach(i => { msg += `✅ ${i.qtd}x ${i.nome}\n`; });
+                if (valorDesconto > 0) {
+                    msg += `\n*DESCONTO DONYCOINS:* -R$ ${valorDesconto.toFixed(2)}\n`;
+                }
+                msg += `\n*TOTAL FINAL: R$ ${totalComDesconto.toFixed(2)}*\n\n`;
+                msg += `*⚠️ ATENÇÃO:* Guarde seu ID para rodar a Roleta da Sorte!`;
+
+                canvas.toBlob(async (blob) => {
+                    const file = new File([blob], `PEDIDO_${idPedidoAtual}.png`, { type: "image/png" });
+                                                                                                                                                 
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Comprovante Dony Burguer',
+                                text: msg
+                            });
+                            window.location.href = `https://wa.me/${CHIP_DESTINO}?text=${encodeURIComponent(msg)}`;
+                        } catch (shareErr) {
+                            dispararFallbackDownload(imgData, msg);
+                        }
+                    } else {
+                        dispararFallbackDownload(imgData, msg);
+                    }
+                }, "image/png");
+
+                carrinho = [];
+                localStorage.setItem('carrinho', JSON.stringify(carrinho));
+                updateCartUI();
+                fecharModalRecibo();
+                toggleCartScreen();
+
+            } catch (err) {
+                alert("ERRO INDUSTRIAL DE TRANSMISSÃO. DISPARANDO FALLBACK WHATSAPP.");
+                window.location.href = `https://wa.me/${CHIP_DESTINO}?text=Erro%20Comprovante%20ID%20${idPedidoAtual}`;
+            } finally {
+                btn.innerHTML = `<i class="fab fa-whatsapp"></i> ENVIAR PEDIDO AGORA`;
+                btn.disabled = false;
+            }
+        }
+
+        function alternarAbaAuth(aba) {
+            const loginView = document.getElementById('auth-login-view');
+            const cadastroView = document.getElementById('auth-cadastro-view');
+            const tabLogin = document.getElementById('btn-tab-login');
+            const tabCadastro = document.getElementById('btn-tab-cadastro');
+
+            if (aba === 'login') {
+                loginView.classList.remove('hidden');
+                cadastroView.classList.add('hidden');
+                tabLogin.className = "flex-1 auth-tab text-[#fde047] border-b-2 border-[#fde047]";
+                tabCadastro.className = "flex-1 auth-tab text-slate-500";
+            } else {
+                loginView.classList.add('hidden');
+                cadastroView.classList.remove('hidden');
+                tabCadastro.className = "flex-1 auth-tab text-[#fde047] border-b-2 border-[#fde047]";
+                tabLogin.className = "flex-1 auth-tab text-slate-500";
+            }
+        }
+
+        function realizarLoginLocal() {
+            const rawWhats = document.getElementById('login-whatsapp').value;
+            const whatsLimpo = rawWhats.replace(/\D/g, "");
+
+            if (!whatsLimpo || whatsLimpo.length < 8) {
+                return alert("POR FAVOR, INSIRA UM WHATSAPP VÁLIDO!");
+            }
+
+            db.ref(`lojas/${LOJA_ID}/usuarios/${whatsLimpo}`).once('value').then(snap => {
+                if (snap.exists()) {
+                    const dadosUsuario = snap.val();
+                    localStorage.setItem('jdp_cliente_nome', dadosUsuario.nome);
+                    localStorage.setItem('jdp_cliente_whatsapp', dadosUsuario.whatsapp);
+                    localStorage.setItem('jdp_cliente_endereco', dadosUsuario.endereco || "MANAUS");
+                                                                                                                             
+                    vincularUsuarioFirebase(dadosUsuario.whatsapp);
+                    document.getElementById('modal-cadastro').style.display = 'none';
+                } else {
+                    alert("WHATSAPP NÃO LOCALIZADO! FAÇA SEU CADASTRO RÁPIDO NA OUTRA ABA.");
+                    alternarAbaAuth('cadastro');
+                }
+            }).catch(err => {
+                alert("ERRO DE COMUNICAÇÃO NO BANCO DE DADOS.");
+            });
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('dropdown-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        window.addEventListener('click', function(e) {
+            const menu = document.getElementById('dropdown-menu');
+            if (menu) {
+                const button = menu.previousElementSibling;
+                if (!menu.classList.contains('hidden') && !menu.contains(e.target) && !button.contains(e.target)) {
+                    menu.classList.add('hidden');
+                }
+            }
+        });
+
+        function deslogarSistema() {
+            if (confirm("Deseja realmente sair da conta?")) {
+                localStorage.removeItem('jdp_cliente_nome');
+                localStorage.removeItem('jdp_cliente_whatsapp');
+                localStorage.removeItem('jdp_cliente_endereco');
+                location.reload();
+            }
+        }
+
+        function atualizarLinksComUsuario() {
+            const whats = localStorage.getItem('jdp_cliente_whatsapp') || "";
+            const queryParam = whats ? `?u=${whats}` : "";
+                                                                                          
+            document.getElementById('btn-logo').href = "https://pradodalapa-hue.github.io/JDPSistemasmaprtyss688jfdssyiihfd/" + queryParam;
+            document.getElementById('btn-Jogo').href = "https://pradodalapa-hue.github.io/JDPSistemastigerrtyss688jfdssyiihfd/" + queryParam;
+            document.getElementById('btn-Chat').href = "https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/" + queryParam;
+        }
+
+        let currentSlide = 0;
+        function startBannerRotation() {
+            const track = document.getElementById('sliderTrack');
+            const slides = track.children;
+            if (slides.length <= 1) return;
+                                                                                          
+            setInterval(() => {
+                currentSlide = (currentSlide + 1) % slides.length;
+                track.style.transform = `translateX(-${currentSlide * 100}%)`;
+            }, 3500);
+        }
+
+        function renderBanners() {
+            document.getElementById('sliderTrack').innerHTML = bannerData.map(b => `
+                <div class="slide">
+                    <img src="${b.img}" onerror="this.src='${FOTO_ERRO}'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent flex items-end p-6">
+                        <span class="text-white font-black italic text-sm tracking-wider uppercase">${b.text}</span>
+                    </div>
+                </div>`).join('');
+        }
+
+        // =====================================================================
+        //  VINCULAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL COM O DONYPAY (FORMATO R$ 99,01)
+        // =====================================================================
+        function vincularUsuarioFirebase(whatsapp) {
+            const whatsLimpo = whatsapp.replace(/\D/g, "");
+
+            db.ref(`lojas/${LOJA_ID}/usuarios/${whatsLimpo}`).on('value', snap => {
+                const user = snap.val();
+                if (user) {
+                    donycoinsUsuario = parseFloat(user.donycoins) || 0;
+                                          
+                    // Formatação Suprema Exigida pelo Criador (R$ 99,01)
+                    const saldoFormatado = "R$ " + donycoinsUsuario.toFixed(2).replace('.', ',');
+                    document.getElementById('coin-count').innerText = saldoFormatado;
+                    document.getElementById('checkout-coin-balance').innerText = saldoFormatado;
+                                                              
+                    calcularPrecoFinal();
+                }
+            });
+            atualizarLinksComUsuario();
+        }
+
+        /* ===================================================================== */
+        /*  RENDERIZADOR DE GRID COM A CAMADA DE VIDRO (ANTIRROUBO DE FOTOS)     */
+        /* ===================================================================== */
+        function renderGrid(filter) {
+            categoriaAtiva = filter;
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = '';
+            const filtrados = filter === 'todos' ? produtosFirebase : produtosFirebase.filter(p => p.cat === filter);
+                                                                                          
+            filtrados.forEach(p => {
+                const img = p.link || p.img || FOTO_ERRO;
+                                 
+                // Procurar se o item está no carrinho para renderizar o Badge exato
+                const itemNoCarrinho = carrinho.find(c => c.nome === p.nome);
+                const qtd = itemNoCarrinho ? itemNoCarrinho.qtd : 0;
+
+                grid.innerHTML += `
+                    <div class="card-venda" onclick="openModal('${p.nome}', '${p.preco}', '${img}')">
+                        ${qtd > 0 ? `<div class="badge-qtd">${qtd}</div>` : ''}
+                                                 
+                        <!-- CAMADA DE VIDRO BLINDADA CONTRA ARRASTAR E SALVAR -->
+                        <div class="glass-shield"></div>
+                                                 
+                        <img src="${img}" onerror="this.src='${FOTO_ERRO}'">
+                                                 
+                        <div class="card-info">
+                            <div class="nome-produto">${p.nome}</div>
+                            <div class="price">R$ ${parseFloat(p.preco || 0).toFixed(2).replace('.', ',')}</div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function openModal(nome, preco, img) {
+            document.getElementById('modal-nome').innerText = nome;
+            document.getElementById('modal-preco').innerText = "R$ " + parseFloat(preco).toFixed(2).replace('.', ',');
+            document.getElementById('modal-img').src = img;
+            document.getElementById('product-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('product-modal').classList.add('hidden');
+        }
+
+        function handleAddToCartFromModal() {
+            const nome = document.getElementById('modal-nome').innerText;
+            const precoStr = document.getElementById('modal-preco').innerText.replace('R$ ', '').replace(',', '.');
+            const img = document.getElementById('modal-img').src;
+                                                                                          
+            const item = carrinho.find(c => c.nome === nome);
+            if (item) {
+                item.qtd++;
+            } else {
+                carrinho.push({
+                    id: "ID-" + Math.random().toString(36).substr(2, 9).toUpperCase(),
+                    nome: nome,
+                    preco: parseFloat(precoStr),
+                    img: img,
+                    qtd: 1
+                });
+            }
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+            updateCartUI();
+            closeModal();
+        }
+
+        function updateCartUI() {
+            const list = document.getElementById('cart-items-list');
+            const countEl = document.getElementById('cart-count');
+                                                                                          
+            subtotalPedido = 0;
+            let totalItens = 0;
+                                                                                          
+            list.innerHTML = carrinho.map((item, idx) => {
+                subtotalPedido += (item.preco * item.qtd);
+                totalItens += item.qtd;
+                return `
+                    <div class="flex items-center gap-3 bg-[#0f172a] p-3 rounded-lg border border-slate-800">
+                        <div class="flex-1 text-[11px] font-bold">
+                            <span class="text-[#fde047]">${item.qtd}x</span> ${item.nome}
+                        </div>
+                        <div class="text-xs font-mono text-slate-300">R$ ${(item.preco * item.qtd).toFixed(2).replace('.', ',')}</div>
+                        <button onclick="removerItem(${idx})" class="text-red-500 font-black px-2">X</button>
+                    </div>`;
+            }).join('');
+                                                                                          
+            countEl.innerText = totalItens;
+            calcularPrecoFinal();
+                         
+            // Re-renderizar vitrine para atualizar os badges de quantidade
+            renderGrid(categoriaAtiva);
+        }
+
+        function calcularPrecoFinal() {
+            const usarCoins = document.getElementById('usar-donycoins').checked;
+            const totalEl = document.getElementById('cart-total');
+
+            if (usarCoins && donycoinsUsuario > 0) {
+                valorDesconto = Math.min(subtotalPedido, donycoinsUsuario);
+                totalComDesconto = subtotalPedido - valorDesconto;
+            } else {
+                valorDesconto = 0;
+                totalComDesconto = subtotalPedido;
+            }
+                                                                                          
+            totalEl.innerText = `TOTAL: R$ ${totalComDesconto.toFixed(2).replace('.', ',')}`;
+        }
+
+        function removerItem(idx) {
+            carrinho.splice(idx, 1);
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+            updateCartUI();
+        }
+
+        function toggleCartScreen() {
+            document.getElementById('cart-screen').classList.toggle('hidden');
+        }
+
+        // CONTROLADORES DE MODAIS
+        function verificarFluxoCadastro() {
+            if (carrinho.length === 0) return alert("CARRINHO VAZIO");
+            const w = localStorage.getItem('jdp_cliente_whatsapp');
+            if (!w) {
+                document.getElementById('modal-cadastro').style.display = 'flex';
+                alternarAbaAuth('login');
+            } else {
+                gerarConfirmacao();
+            }
+        }
+
+        function gerarConfirmacao() {
+            idPedidoAtual = "JDP-" + Math.random().toString(36).substr(2, 5).toUpperCase();
+            document.getElementById('id-pedido-display').innerText = "ID: #" + idPedidoAtual;
+            document.getElementById('comp-cliente-nome').innerText = localStorage.getItem('jdp_cliente_nome').toUpperCase();
+            document.getElementById('comp-cliente-phone').innerText = localStorage.getItem('jdp_cliente_whatsapp');
+            document.getElementById('comp-cliente-end').innerText = localStorage.getItem('jdp_cliente_endereco').toUpperCase();
+            document.getElementById('txt-evangelico').innerText = frases[Math.floor(Math.random() * frases.length)];
+            document.getElementById('data-recibo').innerText = "AUTENTICADO EM: " + new Date().toLocaleString();
+                                                                                          
+            document.getElementById('comp-itens-list').innerHTML = carrinho.map(i => {
+                return `
+                    <div class="flex justify-between">
+                        <span>${i.qtd}x ${i.nome}</span>
+                        <span>R$ ${(i.qtd * i.preco).toFixed(2).replace('.', ',')}</span>
+                    </div>`;
+            }).join('');
+                                                                                          
+            document.getElementById('comp-subtotal').innerText = `R$ ${subtotalPedido.toFixed(2).replace('.', ',')}`;
+                                                                                          
+            if (valorDesconto > 0) {
+                document.getElementById('comp-desconto-row').classList.remove('hidden');
+                document.getElementById('comp-desconto').innerText = `-R$ ${valorDesconto.toFixed(2).replace('.', ',')}`;
+            } else {
+                document.getElementById('comp-desconto-row').classList.add('hidden');
+            }
+                                                                                          
+            document.getElementById('comp-total').innerText = `R$ ${totalComDesconto.toFixed(2).replace('.', ',')}`;
+            document.getElementById('modal-supreme').style.display = 'flex';
+        }
+
+        function dispararFallbackDownload(imgData, msg) {
+            const link = document.createElement('a');
+            link.href = imgData;
+            link.download = `PEDIDO_${idPedidoAtual}.png`;
+            link.click();
+            alert("COMPROVANTE GERADO! REDIRECIONANDO AO WHATSAPP...");
+            setTimeout(() => {
+                window.location.href = `https://wa.me/${CHIP_DESTINO}?text=${encodeURIComponent(msg)}`;
+            }, 1000);
+        }
+
+        function fecharModalRecibo() {
+            document.getElementById('modal-supreme').style.display = 'none';
+        }
+
+        function abrirMissoes() {
+            const whats = localStorage.getItem('jdp_cliente_whatsapp');
+            if(!whats) return alert("FAÇA LOGIN PARA ACESSAR AS MISSÕES!");
+            document.getElementById('modal-missoes').style.display = 'flex';
+        }
+
+        function fecharMissoes() {
+            document.getElementById('modal-missoes').style.display = 'none';
+        }
+
+        function filterCategory(cat, el) {
+            document.querySelectorAll('.category-item').forEach(i => i.classList.remove('category-active'));
+            el.classList.add('category-active');
+            renderGrid(cat);
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('DONY BURGUER sw: Registrado', reg.scope))
+                .catch(err => console.log('sw Erro:', err));
+            });
+        }
     </script>
 </body>
-</html>
+        </html>
