@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
-<html lang="pt-BR" class="no-zoom">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <title>HELENA - Painel de Controle de Elite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dony Burgues</title>
+
 
     <!-- ================================================================= -->
     <!--  MÓDULO VIGIA CONTEXTUAL & AUTO-LOGIN UNIVERSAL JDP (0% ERROS)    -->
@@ -13,794 +13,1110 @@
         (function() {
             const urlParams = new URLSearchParams(window.location.search);
             const masterBypass = urlParams.get('admin') || urlParams.get('master') || urlParams.get('login');
-            
-            // Auto-login de Segurança do Criador (Sr. José)
-            if (masterBypass === 'jdp' || masterBypass === '1234' || masterBypass === 'Princesa Diamante') {
-                localStorage.setItem('jdp_admin_bypass', 'true');
-                localStorage.setItem('jdp_cliente_nome', 'SR. JOSÉ DIVINO (CRIADOR)');
-                localStorage.setItem('jdp_cliente_whatsapp', '5592984846058');
-                localStorage.setItem('jdp_cliente_endereco', 'CENTRAL INDUSTRIAL HELENA');
-                localStorage.removeItem('jdp_blocked_forever'); // Garante que o criador nunca fique bloqueado
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
+            const tunnelParam = urlParams.get('tunnel');
+            const CRYPTO_SALT = "PrincesaDiamante_JDP_Sec_2026";
 
-            // Vigia Contextual Julia (Silencioso por baixo do capô)
-            const paramUser = (urlParams.get('user') || urlParams.get('nome') || urlParams.get('u') || "").toUpperCase().trim();
-            const localUser = (localStorage.getItem('jdp_cliente_nome') || "").toUpperCase().trim();
-
-            if (paramUser.includes("JULIA") || localUser.includes("JULIA")) {
-                localStorage.setItem('jdp_cliente_nome', 'JULIA (CONTA MONITORADA)');
-                localStorage.setItem('jdp_cliente_whatsapp', '5592900000000');
-                localStorage.setItem('jdp_cliente_endereco', 'ACESSO DE TESTE VIGIA - AM');
-                
-                if (urlParams.has('user') || urlParams.has('nome')) {
-                    window.location.href = window.location.pathname;
+            // Motor de Impressão de Hardware Local (Sintonia de Consenso)
+            function generateLocalFingerprint() {
+                try {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    ctx.textBaseline = "top";
+                    ctx.font = "12px 'Arial'";
+                    ctx.fillText('HELENA_P2P_SHIELD', 2, 12);
+                    const canvasData = canvas.toDataURL();
+                    let hash = 0;
+                    const inputs = canvasData + navigator.userAgent + screen.width;
+                    for (let i = 0; i < inputs.length; i++) {
+                        hash = (hash << 5) - hash + inputs.charCodeAt(i);
+                        hash |= 0;
+                    }
+                    return Math.abs(hash).toString(16);
+                } catch (e) {
+                    return "fingerprint_jdp_tunnel";
                 }
             }
 
-            // PREVINE PISCADA
-            const whatsSalvo = urlParams.get('u') || localStorage.getItem('jdp_cliente_whatsapp');
-            if (whatsSalvo) {
-                document.documentElement.classList.add('session-active');
+            function generateSaltedSignature(phone, fingerprint) {
+                const input = phone + fingerprint + CRYPTO_SALT;
+                let hash = 0;
+                for (let i = 0; i < input.length; i++) {
+                    hash = ((hash << 5) - hash) + input.charCodeAt(i);
+                    hash |= 0;
+                }
+                return Math.abs(hash).toString(36);
+            }
+
+            // Auto-login de Segurança do Criador (Sr. José)
+            if (masterBypass === 'jdp' || masterBypass === '1234' || masterBypass === 'Princesa Diamante') {
+                localStorage.setItem('jdp_admin_bypass', 'true');
+                sessionStorage.setItem('jdp_cliente_nome', 'SR. JOSÉ DIVINO (CRIADOR)');
+                sessionStorage.setItem('jdp_cliente_whatsapp', '5592984846058');
+                sessionStorage.setItem('jdp_cliente_endereco', 'CENTRAL INDUSTRIAL HELENA');
+                localStorage.removeItem('jdp_blocked_forever');
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return;
+            }
+
+            // VALIDAÇÃO DE CONSENSO DO CRIPTO-TÚNEL JDP
+            if (tunnelParam) {
+                try {
+                    const outerDecoded = JSON.parse(atob(tunnelParam));
+                    const payload = JSON.parse(outerDecoded.payload);
+                    const signature = outerDecoded.signature;
+
+                    // Re-calcula a assinatura com os dados recebidos
+                    const expectedSignature = generateSaltedSignature(payload.phone, payload.fingerprint);
+
+                    if (signature === expectedSignature) {
+                        // Consenso alcançado! Session carregada com sucesso
+                        sessionStorage.setItem('jdp_cliente_nome', payload.name);
+                        sessionStorage.setItem('jdp_cliente_whatsapp', payload.phone);
+                        sessionStorage.setItem('jdp_cliente_endereco', payload.address);
+                        document.documentElement.classList.add('session-active');
+                    } else {
+                        // Assinatura inválida (Fraude de URL detectada)
+                        document.documentElement.classList.remove('session-active');
+                        sessionStorage.clear();
+                        window.onload = () => {
+                            document.getElementById('block-screen').classList.remove('hidden');
+                            document.getElementById('block-referrer').innerText = "Assinatura Corrompida (Tampering)";
+                        };
+                    }
+                } catch (e) {
+                    // Erro de decodificação do bloco
+                    document.documentElement.classList.remove('session-active');
+                    window.onload = () => {
+                        document.getElementById('block-screen').classList.remove('hidden');
+                        document.getElementById('block-referrer').innerText = "Erro ao descriptografar bloco";
+                    };
+                }
+            } else {
+                // Sem túnel ativo na URL, verifica se há sessão ativa temporária
+                const whatsSalvo = sessionStorage.getItem('jdp_cliente_whatsapp');
+                if (whatsSalvo) {
+                    document.documentElement.classList.add('session-active');
+                } else {
+                    document.documentElement.classList.remove('session-active');
+                }
             }
         })();
     </script>
     <!-- ================================================================= -->
-
+         
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <!-- COMPATIBILIDADE DOS MOTORES -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { mono: ['JetBrains Mono', 'monospace'] },
-                    colors: {
-                        slate: { 950: '#020617' },
-                        cyan: { 500: '#06b6d4' },
-                        yellow: { 300: '#fde047' }
-                    }
-                }
-            }
-        }
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        html, body {
-            touch-action: none !important;
-            -webkit-text-size-adjust: 100%;
-            -webkit-user-select: none;
-            user-select: none;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden !important;
+        :root {
+            --jdp-gold: #f59e0b;
+            --jdp-gold-gradient: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+            --jdp-bg: #020305;
+            --jdp-glass: rgba(20, 22, 28, 0.95);
+            --carbon: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
         }
+
         body {
-            font-family: 'JetBrains Mono', monospace;
-            background-color: #020617;
+            background-color: var(--jdp-bg);
             color: #f8fafc;
-            margin: 0 !important;
-            padding: 0 !important;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        #client-panel {
-            width: 100% !important;
-            max-width: 480px;
-            height: 100%;
-            margin: 0 auto;
-            padding: 0.5rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 0.4rem;
-            overflow: hidden !important;
-        }
-        .crisp-bg {
-            image-rendering: -webkit-optimize-contrast !important;
-            image-rendering: crisp-edges !important;
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-        .glow-yellow { box-shadow: 0 0 15px rgba(253, 224, 71, 0.35); }
-        .glow-cyan { box-shadow: 0 0 15px rgba(6, 182, 212, 0.35); }
-        .glow-red { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
-        
-        /* Carrossel de Banners Compactado */
-        .slider-container { 
-            width: 100%; 
-            overflow: hidden; 
-            position: relative; 
-            height: 100%;
-        }
-        .slider-track { 
+
+        /* TELA DE CARREGAMENTO SUPREME HELENA */
+        #loading-supreme {
+            position: fixed; 
+            inset: 0; 
+            background: #020617;
+            z-index: 99999; 
             display: flex; 
-            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center;
+        }
+
+        /* RODA COLORIDA JDP */
+        .spinner-supreme {
+            width: 20px;
+            height: 20px;
+            margin-top: 25px;
+            border: 5px solid transparent;
+            border-top: 5px solid #22c55e; /* Verde */
+            border-right: 5px solid #eab308; /* Amarelo */
+            border-bottom: 5px solid #3b82f6; /* Azul */
+            border-left: 5px solid #a855f7; /* Lilás */
+            border-radius: 50%;
+            animation: spin-supreme 1s linear infinite;
+        }
+
+        @keyframes spin-supreme {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse { 
+            0%, 100% { opacity: 0.4; } 
+            50% { opacity: 1; } 
+        }
+
+        .resplendor-ouro {
+            font-size: 28px; 
+            font-weight: 900; 
+            text-align: center;
+            background: var(--jdp-gold-gradient);
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(253, 224, 71, 0.4));
+            letter-spacing: 2px;
+        }
+
+        .gold-text {
+            color: #fde047;
+            text-shadow: 0 0 12px rgba(253, 224, 71, 0.4);
+        }
+
+        .cyan-glow {
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+            border: 1px solid #06b6d4;
+        }
+
+        .slider-container {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            border-radius: 20px;
+            height: 190px;
+            margin-top: 10px;
+            border: 1px solid #1e293b;
+        }
+
+        .slider-track {
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
             height: 100%;
         }
+
         .slide {
             min-width: 100%;
             height: 100%;
             position: relative;
+            cursor: pointer;
         }
+
         .slide img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        @keyframes scan {
-            0% { top: 0%; }
-            50% { top: 100%; }
-            100% { top: 0%; }
-        }
-        .scanner-line {
-            animation: scan 2s linear infinite;
-            background-color: #06b6d4;
-        }
-        @keyframes holoPulse {
-            0%, 100% { opacity: 0.03; transform: translateY(0) scale(1); }
-            50% { opacity: 0.08; transform: translateY(-4px) scale(1.01); }
-        }
-        .engineer-holo {
-            animation: holoPulse 6s ease-in-out infinite;
-        }
 
-        /* Ocultar barra de rolagem horizontal mantendo funcionalidade */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
 
-        /* ESTEIRA DE TRANSMISSÃO DE GANHOS INFINITA (MARQUEE) */
-        .marquee-jdp-container {
-            width: 100%;
-            background-color: #020617;
-            border-top: 1px solid #fde047;
-            border-bottom: 1px solid #fde047;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-            pointer-events: none;
-            margin-bottom: 0.35rem;
-        }
-        .marquee-jdp-content {
-            display: flex;
-            align-items: center;
-            gap: 40px;
+        .category-item {
+            transition: 0.3s;
             white-space: nowrap;
-            animation: marquee-transmission 22s linear infinite;
-        }
-        .marquee-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 8px;
-            font-weight: 900;
-            color: #ffffff;
-            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-            letter-spacing: 1px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 800;
             text-transform: uppercase;
         }
-        .marquee-icon {
-            width: 14px;
-            height: 14px;
-            object-fit: contain;
-            pointer-events: none;
+
+        .category-active {
+            color: #06b6d4;
+            border-bottom: 2px solid #06b6d4;
+            text-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
+        }
+
+        /* VITRINE DE PRODUTOS JDP */
+        .grid-vendas { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px; 
+        }
+
+        .card-venda {
+            position: relative;
+            width: 100%;
+            height: 250px; 
+            background-color: #000000 !important;
+            border: 1px solid #333;
+            border-radius: 15px; 
+            overflow: hidden; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .card-venda:hover {
+            border-color: #06b6d4;
+        }
+
+        /* IMAGEM SEM INTERAÇÃO DIRETA (PROTEGIDA) */
+        .card-venda img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain !important; 
+            background: #000000 !important; 
+            padding: 0; 
+            pointer-events: none; /* Impede arrastar e cliques diretos */
+            -webkit-user-drag: none;
+        }
+
+        /* CAMADA DE VIDRO BLINDADA CONTRA CÓPIA JDP */
+        .glass-shield {
+            position: absolute;
+            inset: 0;
+            background: transparent;
+            z-index: 3; /* Acima da Imagem e abaixo das informações se necessário */
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none; /* Bloqueia menu salvar no iOS */
+        }
+
+        .card-info { 
+            position: absolute; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0)) !important; 
+            padding: 8px 5px; 
+            text-align: center; 
+            z-index: 4; /* Acima do escudo de vidro */
+        }
+
+        .card-info .nome-produto { 
+            font-size: 11px; 
+            color: #888 !important; 
+            text-transform: uppercase; 
+            margin-bottom: 2px; 
+            font-weight: 700; 
+            letter-spacing: 0.5px;
+        }
+
+        .card-info .price { 
+            font-weight: 900; 
+            font-size: 1.1rem; 
+            background: var(--jdp-gold-gradient); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            display: inline-block;
+        }
+
+        .badge-qtd { 
+            position: absolute; 
+            top: 5px; 
+            right: 5px; 
+            background: var(--jdp-gold); 
+            color: #000; 
+            padding: 2px 8px; 
+            border-radius: 5px; 
+            font-weight: 900; 
+            font-size: 12px; 
+            z-index: 5; /* No topo absoluto */
+        }
+
+        .bottom-nav {
+            background: rgba(2, 6, 23, 0.95);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid #1e293b;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            z-index: 100;
+        }
+
+        .btn-flutuante {
+            position: fixed;
+            right: 20px;
+            width: 52px;
+            height: 52px;
+            z-index: 999;
+            cursor: pointer;
             border-radius: 50%;
-        }
-        @keyframes marquee-transmission {
-            0% { transform: translateX(0%); }
-            100% { transform: translateX(-50%); }
-        }
-
-        /* ESTILO DO TICKER VERTICAL DE LÍDERES */
-        #leaderboard-ticker-content {
-            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            border: 2px solid #06b6d4;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #020617;
         }
 
-        /* Animação de Vibração Suave para Caixas Individuais */
-        @keyframes cardVibrate {
-            0% { transform: translate(0, 0) scale(1.02); }
-            20% { transform: translate(-1px, 1px) rotate(-0.5deg) scale(1.02); }
-            40% { transform: translate(1px, -1px) rotate(0.5deg) scale(1.02); }
-            60% { transform: translate(-1px, -1px) rotate(-0.5deg) scale(1.02); }
-            80% { transform: translate(1px, 1px) rotate(0.5deg) scale(1.02); }
-            100% { transform: translate(0, 0) rotate(0deg) scale(1.02); }
-        }
-        .vibrate-card-active {
-            animation: cardVibrate 0.1s infinite !important;
-            border-color: #06b6d4 !important;
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.8) !important;
-            z-index: 30 !important;
+        #btn-Chat { bottom: 210px; animation: pulsar-invisivel 4s infinite ease-in-out; }
+        #btn-Jogo { bottom: 145px; border-color: #fde047; box-shadow: 0 0 15px rgba(253, 224, 71, 0.4); }
+        #btn-logo { bottom: 80px; }
+                                                  
+        @keyframes pulsar-invisivel {
+            0%, 100% { opacity: 0; transform: scale(0.8); }
+            20%, 80% { opacity: 1; transform: scale(1); }
         }
 
-        /* Efeito de Vibração da Tela Inteira */
-        @keyframes screenVibrate {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            10% { transform: translate(-2px, -2px) rotate(-0.5deg); }
-            20% { transform: translate(2px, 2px) rotate(0.5deg); }
-            30% { transform: translate(-2px, 2px) rotate(-0.5deg); }
-            40% { transform: translate(2px, -2px) rotate(0.5deg); }
-            50% { transform: translate(-2px, -2px) rotate(-0.5deg); }
-            60% { transform: translate(2px, 2px) rotate(0.5deg); }
-            70% { transform: translate(-2px, 2px) rotate(-0.5deg); }
-            100% { transform: translate(0, 0) rotate(0deg); }
-        }
-        .vibrate-active {
-            animation: screenVibrate 0.15s infinite !important;
+        .modal-industrial {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(2,6,23,0.95);
+            z-index: 10000;
+            padding: 20px;
+            overflow-y: auto;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
         }
 
-        /* Controle de Exibição das Sessões */
-        .session-active #login-screen {
-            display: none !important;
+        .recibo-area {
+            background: #000000;
+            border: 2px solid #06b6d4;
+            width: 100%;
+            max-width: 350px;
+            padding: 25px;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            position: relative;
         }
-        .session-active #client-panel {
-            display: flex !important;
+
+        .recibo-area::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: repeating-linear-gradient(90deg, #06b6d4, #06b6d4 10px, transparent 10px, transparent 20px);
+        }
+
+        .auth-tab {
+            cursor: pointer;
+            padding: 10px;
+            font-weight: 900;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: 0.3s;
         }
     </style>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#bf953f">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" sizes="192x192" href="icon-192.png">
+    <link rel="icon" sizes="512x512" href="icon-512.png">
+    <link class="apple-touch-icon" href="icon-192.png">
 </head>
-<body class="w-screen h-screen flex flex-col justify-between relative overflow-hidden">
+<body class="pb-28" oncontextmenu="return false;"> <!-- Desativa clique direito global -->
 
-    <!-- CAMADA INVISÍVEL DE CAPTURA PARA GATILHO DA CERIMÔNIA -->
-    <div id="celebration-trigger-overlay" class="fixed inset-0 bg-black/95 z-[99998] hidden flex flex-col items-center justify-center text-center p-6">
-        <div class="bg-slate-900 border-2 border-yellow-300 p-6 rounded-2xl glow-yellow max-w-xs animate-bounce cursor-pointer">
-            <i class="fas fa-trophy text-5xl text-yellow-300 mb-3 animate-pulse"></i>
-            <h3 class="text-white font-black text-xs uppercase tracking-wider">ESTEIRA FINALIZADA!</h3>
-            <p class="text-[10px] text-slate-400 mt-2">Toque em qualquer lugar da tela para iniciar sua certificação de premiação.</p>
-        </div>
+    <!-- TELA DE CARREGAMENTO SUPREME (RODA COLORIDA JDP) -->
+    <div id="loading-supreme">
+        <div class="resplendor-ouro">DONY BURGUERS</div>
+        <div id="loading-status-text" style="margin-top: 12px; color: #fde047; font-size: 10px; font-weight: 800; letter-spacing: 2px; animation: pulse 1.5s infinite;">CARREGANDO NAVE...</div>
+        <div class="spinner-supreme"></div>
     </div>
 
-    <!-- OVERLAY DE DESTRUIÇÃO/COMPLETO (DUPLO VÍDEO DE 10S CADA COM ÁUDIO ATIVO) -->
-    <div id="destruction-overlay" class="fixed inset-0 bg-black z-[99999] hidden flex flex-col items-center justify-center overflow-hidden">
-        <!-- Container do Vídeo Sequencial -->
-        <div id="video-container" class="absolute inset-0 flex items-center justify-center bg-black z-20">
-            <video id="celebration-video" class="w-full h-full object-cover" playsinline></video>
-            <div class="absolute bottom-6 left-0 right-0 text-center z-30">
-                <p class="text-yellow-300 font-black text-[10px] tracking-widest uppercase animate-pulse">AUTORIZAÇÃO MÁXIMA DE PREMIAÇÃO</p>
+    <!-- MOTOR DE CADASTRO / LOGIN UNIFICADO COM DUAL-TAB JDP -->
+    <div id="modal-cadastro" class="modal-industrial">
+        <div class="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 w-full max-w-[320px] cyan-glow">
+            <h2 class="gold-text font-black mb-1 italic tracking-wider text-center text-sm">DONY BURGUER'S</h2>
+            <p class="text-[9px] text-slate-400 text-center mb-4 uppercase tracking-widest">Acesso de Operador JDP</p>
+                                                                          
+            <!-- ABAS DE SELEÇÃO (LOGIN / CADASTRO) -->
+            <div class="flex border-b border-slate-800 mb-4 text-center">
+                <div id="btn-tab-login" onclick="alternarAbaAuth('login')" class="flex-1 auth-tab text-[#fde047] border-b-2 border-[#fde047]">
+                    Entrar
+                </div>
+                <div id="btn-tab-cadastro" onclick="alternarAbaAuth('cadastro')" class="flex-1 auth-tab text-slate-500">
+                    Cadastrar
+                </div>
+            </div>
+
+            <!-- VIEW 1: ENTRAR -->
+            <div id="auth-login-view" class="space-y-1">
+                <p class="text-[10px] text-slate-400 text-center mb-2">Digite seu WhatsApp para recuperar seus dados.</p>
+                <input type="tel" id="login-whatsapp" placeholder="Ex: 5592984846058" class="w-full text-center bg-slate-950 border border-slate-800 rounded-xl py-2 text-white text-xs">
+                <button onclick="realizarLoginLocal()" class="w-full bg-[#06b6d4] text-black font-black py-3 rounded-xl uppercase text-xs tracking-wider transition hover:opacity-90 mt-2">
+                    Entrar no Cockpit
+                </button>
+            </div>
+
+            <!-- VIEW 2: CADASTRAR -->
+            <div id="auth-cadastro-view" class="space-y-1 hidden">
+                <input type="text" id="cad-nome" placeholder="NOME COMPLETO" class="w-full text-center uppercase bg-slate-950 border border-slate-800 rounded-xl py-2 text-white text-xs mb-1">
+                <input type="tel" id="cad-whatsapp" placeholder="WHATSAPP COM DDD" class="w-full text-center bg-slate-950 border border-slate-800 rounded-xl py-2 text-white text-xs mb-1">
+                <input type="text" id="cad-endereco" placeholder="ENDEREÇO COMPLETO" class="w-full text-center uppercase bg-slate-950 border border-slate-800 rounded-xl py-2 text-white text-xs">
+                <button id="btn-cadastrar-trigger" onclick="salvarCadastroLocal()" class="w-full bg-[#fde047] text-black font-black py-3 rounded-xl uppercase text-xs tracking-wider transition hover:opacity-90 mt-2">
+                    Criar Conta & Ganhar 10 DonyCoins
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- TELA DE BLOQUEIO DE SEGURANÇA -->
-    <div id="block-screen" class="fixed inset-0 bg-black z-[99999] hidden flex flex-col items-center justify-center p-6 font-mono text-red-500">
-        <div class="border-2 border-red-500 p-8 rounded-lg max-w-md w-full bg-slate-950 text-center shadow-[0_0_30px_rgba(239,68,68,0.5)]">
-            <i class="fas fa-radiation-alt text-6xl text-red-500 mb-4"></i>
-            <h1 class="text-xl font-black uppercase tracking-widest text-red-500">VIOLAÇÃO DE SEGURANÇA</h1>
-            <div class="border-t border-red-500/30 my-4"></div>
-            <p class="text-xs text-slate-300 text-left mb-4 leading-relaxed">
-                [ALERTA PX] O sistema detectou uma inconsistência grave e bloqueou o acesso temporariamente.
-            </p>
-            <div class="bg-black/80 border border-red-500/20 p-3 rounded text-left text-[10px] text-red-400 space-y-1 mb-4">
-                <p>> ORIGEM: <span id="block-referrer">N/A</span></p>
-                <p>> IP DETECTADO: <span id="block-ip">Rastreando...</span></p>
-                <p>> STATUS: CONEXÃO BLOQUEADA</p>
+    <!-- PAINEL DE MISSÕES -->
+    <div id="modal-missoes" class="modal-industrial">
+        <div class="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 w-full max-w-[340px] cyan-glow">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-cyan-400 font-black italic tracking-wider text-sm">MISSÕES JDP</h2>
+                <button onclick="fecharMissoes()" class="text-slate-400 text-xs">FECHAR X</button>
             </div>
-            <p class="text-[9px] text-slate-500 uppercase font-bold">HELENA SHIELD v4.2 - CRIADOR JDP</p>
-        </div>
-    </div>
-
-    <!-- CANVAS OCULTO PARA GERAÇÃO OPERACIONAL -->
-    <canvas id="hidden-task-canvas" class="hidden"></canvas>
-
-    <!-- PANO DE FUNDO DO CRIADOR -->
-    <div id="espaco-pano-de-fundo-criador" class="absolute inset-0 z-0 pointer-events-none overflow-hidden opacity-5 bg-cover bg-center crisp-bg" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780222302298_Screenshot_20260530_220819_WhatsApp.jpg');"></div>
-
-    <!-- HOLOGRÁFICO ENGENHEIRO (MARCA D'ÁGUA COMPACTA) -->
-    <div class="absolute bottom-0 right-0 w-[200px] h-[300px] z-10 pointer-events-none bg-contain bg-right-bottom bg-no-repeat opacity-5 engineer-holo crisp-bg" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780228893372_Engenheiro_Transparente__2_.png');"></div>
-
-    <!-- TELA DE LOGIN DO CLIENTE -->
-    <div id="login-screen" class="fixed inset-0 bg-[#020617]/95 z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border-2 border-cyan-500 p-6 rounded-2xl max-w-md w-full glow-cyan">
-            <div class="text-center mb-4">
-                <i class="fas fa-industry text-3xl text-cyan-500 mb-2"></i>
-                <h2 class="text-base font-bold text-white uppercase">Acesso do Operador</h2>
-                <p class="text-[9px] text-slate-400">Insira seus dados para carregar sua esteira de baús</p>
-            </div>
+            <p class="text-[11px] text-slate-400 mb-4">Complete tarefas para acumular DonyCoins que valem dinheiro real no fechamento do seu pedido!</p>
+                                                                          
             <div class="space-y-3">
-                <div>
-                    <label class="text-[9px] text-cyan-400 block mb-0.5">NOME COMPLETO</label>
-                    <input type="text" id="user-name-input" placeholder="Ex: Julia Silva" class="w-full bg-black border border-slate-700 text-white text-xs rounded p-2.5 focus:outline-none focus:border-cyan-500 uppercase">
-                </div>
-                <div>
-                    <label class="text-[9px] text-cyan-400 block mb-0.5">TELEFONE COM DDD</label>
-                    <input type="tel" id="user-phone-input" placeholder="Ex: 92984846058" class="w-full bg-black border border-slate-700 text-white text-xs rounded p-2.5 focus:outline-none focus:border-cyan-500">
-                </div>
-                <button onclick="registerSession()" class="w-full bg-[#fde047] text-black font-black py-3 rounded-xl hover:opacity-90 transition-all uppercase tracking-wider text-[10px]">
-                    Conectar ao Sistema Helena
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- PAINEL DO CLIENTE (TELA ÚNICA SEM SCROLL) -->
-    <div id="client-panel" class="hidden z-20 flex-1">
-
-        <!-- BARRA DE INFORMAÇÕES (COMPACTA) -->
-        <div class="flex items-center justify-between bg-slate-900/80 border border-slate-800 p-2.5 rounded-xl backdrop-blur-md flex-shrink-0">
-            <div class="flex items-center gap-2">
-                <div class="relative w-7 h-7 rounded-full bg-slate-950 border border-green-500 flex items-center justify-center overflow-hidden">
-                    <i class="fab fa-whatsapp text-green-400 text-sm"></i>
-                </div>
-                <div>
-                    <span class="text-[6px] text-cyan-400 block uppercase tracking-widest leading-none">OPERADOR JDP</span>
-                    <span id="client-header-name" class="text-[10px] font-black text-white leading-tight">Carregando...</span>
-                </div>
-            </div>
-            <div class="flex items-center gap-1.5">
-                <i class="fas fa-coins text-yellow-300 text-[10px]"></i>
-                <span id="display-coins-header" class="text-[9px] bg-yellow-400/10 text-yellow-300 border border-yellow-400/20 px-2 py-0.5 rounded font-black uppercase tracking-wider">0 COINS</span>
-            </div>
-        </div>
-
-        <!-- CARROSSEL DE BANNERS (COMPACTO) -->
-        <div class="w-full h-20 bg-slate-900/80 border border-slate-800 rounded-xl overflow-hidden relative backdrop-blur-md flex-shrink-0">
-            <div id="slider-container" class="slider-container">
-                <div id="sliderTrack" class="slider-track">
-                    <!-- Injetado via Javascript -->
-                </div>
-            </div>
-        </div>
-
-        <!-- TICKER DE LÍDERES EM TEMPO REAL (DE BAIXO PARA CIMA INFINITO) -->
-        <div class="h-7 overflow-hidden relative border border-cyan-500/30 bg-slate-950/80 rounded-lg flex items-center px-3 gap-2 flex-shrink-0">
-            <span class="text-[7px] text-[#fde047] font-black uppercase tracking-wider shrink-0 flex items-center gap-1">
-                <i class="fas fa-crown animate-pulse"></i> LÍDERES JDP:
-            </span>
-            <div class="relative flex-1 h-full overflow-hidden">
-                <div id="leaderboard-ticker-content" class="absolute w-full flex flex-col">
-                    <div class="h-7 flex items-center justify-center text-[7px] text-slate-500 font-mono uppercase tracking-wider w-full">
-                        Sincronizando Central...
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ESTEIRA DOS BAÚS (COMPACTA) -->
-        <section id="chests-section" class="bg-slate-900/80 border border-slate-800 rounded-xl p-2.5 backdrop-blur-md flex-shrink-0">
-            <div class="border-b border-slate-800 pb-1 mb-1.5 flex justify-between items-center">
-                <div>
-                    <span class="text-[6px] text-cyan-400 tracking-widest uppercase block mb-0.5">// PROGRESSÃO</span>
-                    <h2 class="text-[9px] font-black text-white uppercase tracking-wider">Esteira de Missões</h2>
-                </div>
-                <span id="progress-badge" class="text-[8px] text-[#fde047] font-bold uppercase">Nível 1</span>
-            </div>
-            <div class="grid grid-cols-3 gap-2" id="chests-grid">
-                <!-- Injetado dinamicamente -->
-            </div>
-        </section>
-
-        <!-- ESTEIRA HORIZONTAL DE CASSINO/JOGOS JDP (COMPACTA) -->
-        <section id="games-section" class="bg-slate-900/80 border border-slate-800 rounded-xl p-2.5 backdrop-blur-md flex-shrink-0">
-            <div class="border-b border-slate-800 pb-1 mb-1.5 flex justify-between items-center">
-                <div>
-                    <span class="text-[6px] text-yellow-300 tracking-widest uppercase block mb-0.5">// ENTRETENIMENTO</span>
-                    <h2 class="text-[9px] font-black text-white uppercase tracking-wider">Módulos de Cassino</h2>
-                </div>
-                <span class="text-[6px] text-cyan-400 border border-cyan-500/30 px-1.5 py-0.5 rounded uppercase font-bold">DESLIZE <i class="fas fa-arrow-right ml-0.5"></i></span>
-            </div>
-
-            <!-- ESTEIRA DE TRANSMISSÃO DE GANHOS INFINITA (DO CASINO ORIGINAL) -->
-            <div class="marquee-jdp-container rounded-lg">
-                <div class="marquee-jdp-content">
-                    <div class="marquee-item">
-                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780739457850_1776103715509.png" class="marquee-icon">
-                        Ganhos em todas as rodadas grátis
-                    </div>
-                    <div class="marquee-item">
-                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780732245860_1001213807.png" class="marquee-icon">
-                        Vantagem exclusiva Dony Burguer's!
-                    </div>
-                    <div class="marquee-item">
-                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780732234509_1001213806.png" class="marquee-icon">
-                        Helena Core Sincronizada
-                    </div>
-                    <div class="marquee-item">
-                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780732257351_1001213809.png" class="marquee-icon">
-                        Ganhos Garantidos no Pix
-                    </div>
-                    <!-- DUPLICAÇÃO PARA LOOPING INFINITO SEM CORTES -->
-                    <div class="marquee-item">
-                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780739457850_1776103715509.png" class="marquee-icon">
-                        Ganhos em todas as rodadas grátis
-                    </div>
-                    <div class="marquee-item">
-                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780732245860_1001213807.png" class="marquee-icon">
-                        Vantagem exclusiva Dony Burguer's!
-                    </div>
-                    <div class="marquee-item">
-                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780732234509_1001213806.png" class="marquee-icon">
-                        Helena Core Sincronizada
-                    </div>
-                    <div class="marquee-item">
-                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780732257351_1001213809.png" class="marquee-icon">
-                        Ganhos Garantidos no Pix
-                    </div>
-                </div>
-            </div>
-            
-            <!-- CONTÊINER HORIZONTAL COM TOUCH SLIDE (8 VAGAS FÍSICAS NO INDEX - COMPACTADAS) -->
-            <div id="games-scroll-container" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth snap-x snap-mandatory">
-                
-                <!-- ========================================== -->
-                <!-- VAGA 1 -->
-                <!-- ========================================== -->
-                <a href="https://pradodalapa-hue.github.io/JDPSistemascompletrtyss688jfdssyiihfd/" target="_blank" class="snap-start shrink-0 w-20 h-20 border border-yellow-400 rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781778882487_jdp_1780641591780_1001211522.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #020617;">
-                    <span class="absolute top-0.5 left-0.5 bg-yellow-300 text-black font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J1</span>
-                    <span class="absolute top-0.5 right-0.5 bg-cyan-500 text-black font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">ATIVO</span>
-                    <div class="z-10 mt-auto bg-black/85 rounded py-0.5 px-0.5 text-center">
-                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 1</span>
-                    </div>
-                </a>
-
-                <!-- ========================================== -->
-                <!-- VAGA 2 -->
-                <!-- ========================================== -->
-                <a href="https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/" target="_blank" class="snap-start shrink-0 w-20 h-20 border border-cyan-500 rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775954037_jdp_1780732245860_1001213807.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #020617;">
-                    <span class="absolute top-0.5 left-0.5 bg-cyan-500 text-black font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J2</span>
-                    <div class="z-10 mt-auto bg-black/85 rounded py-0.5 px-0.5 text-center">
-                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 2</span>
-                    </div>
-                </a>
-
-                <!-- ========================================== -->
-                <!-- VAGA 3 -->
-                <!-- ========================================== -->
-                <a href="https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/" target="_blank" class="snap-start shrink-0 w-20 h-20 border border-cyan-500 rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775954037_jdp_1780732245860_1001213807.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #020617;">
-                    <span class="absolute top-0.5 left-0.5 bg-cyan-500 text-black font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J3</span>
-                    <div class="z-10 mt-auto bg-black/85 rounded py-0.5 px-0.5 text-center">
-                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 3</span>
-                    </div>
-                </a>
-
-                <!-- ========================================== -->
-                <!-- VAGA 4 -->
-                <!-- ========================================== -->
-                <a href="https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/" target="_blank" class="snap-start shrink-0 w-20 h-20 border border-cyan-500 rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775954037_jdp_1780732245860_1001213807.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #020617;">
-                    <span class="absolute top-0.5 left-0.5 bg-cyan-500 text-black font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J4</span>
-                    <div class="z-10 mt-auto bg-black/85 rounded py-0.5 px-0.5 text-center">
-                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 4</span>
-                    </div>
-                </a>
-
-                <!-- ========================================== -->
-                <!-- VAGA 5 -->
-                <!-- ========================================== -->
-                <a href="https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/" target="_blank" class="snap-start shrink-0 w-20 h-20 border border-cyan-500 rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775954037_jdp_1780732245860_1001213807.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #020617;">
-                    <span class="absolute top-0.5 left-0.5 bg-cyan-500 text-black font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J5</span>
-                    <div class="z-10 mt-auto bg-black/85 rounded py-0.5 px-0.5 text-center">
-                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 5</span>
-                    </div>
-                </a>
-
-                <!-- ========================================== -->
-                <!-- VAGA 6 -->
-                <!-- ========================================== -->
-                <a href="https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/" target="_blank" class="snap-start shrink-0 w-20 h-20 border border-cyan-500 rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775954037_jdp_1780732245860_1001213807.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #020617;">
-                    <span class="absolute top-0.5 left-0.5 bg-cyan-500 text-black font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J6</span>
-                    <div class="z-10 mt-auto bg-black/85 rounded py-0.5 px-0.5 text-center">
-                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 6</span>
-                    </div>
-                </a>
-
-                <!-- ========================================== -->
-                <!-- VAGA 7 -->
-                <!-- ========================================== -->
-                <a href="https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/" target="_blank" class="snap-start shrink-0 w-20 h-20 border border-cyan-500 rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775954037_jdp_1780732245860_1001213807.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #020617;">
-                    <span class="absolute top-0.5 left-0.5 bg-cyan-500 text-black font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J7</span>
-                    <div class="z-10 mt-auto bg-black/85 rounded py-0.5 px-0.5 text-center">
-                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 7</span>
-                    </div>
-                </a>
-
-                <!-- ========================================== -->
-                <!-- VAGA 8 -->
-                <!-- ========================================== -->
-                <a href="https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/" target="_blank" class="snap-start shrink-0 w-20 h-20 border border-cyan-500 rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775954037_jdp_1780732245860_1001213807.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #020617;">
-                    <span class="absolute top-0.5 left-0.5 bg-cyan-500 text-black font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J8</span>
-                    <div class="z-10 mt-auto bg-black/85 rounded py-0.5 px-0.5 text-center">
-                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 8</span>
-                    </div>
-                </a>
-
-            </div>
-        </section>
-
-        <!-- SEÇÃO DE CONCLUÍDO -->
-        <section id="completed-section" class="hidden bg-slate-900/80 border-2 border-[#fde047] rounded-xl p-4 text-center backdrop-blur-md flex-shrink-0">
-            <i class="fas fa-trophy text-3xl text-yellow-300 mb-2 animate-bounce"></i>
-            <h2 class="text-sm font-black text-white uppercase tracking-wider">ESTEIRA TOTALMENTE CONCLUÍDA!</h2>
-            <p class="text-[10px] text-slate-400 mt-1 mb-3">Parabéns! Você completou todos os 6 baús designados pela inteligência Helena.</p>
-            <button onclick="reabrirCertificado()" class="w-full bg-[#fde047] text-black font-black py-3 rounded-xl text-[10px] uppercase tracking-wider transition hover:opacity-90">
-                <i class="fas fa-certificate mr-1"></i> Visualizar Meu Ticket
-            </button>
-        </section>
-
-        <footer class="border-t border-slate-950 bg-[#020308] py-1 text-center text-[7px] text-slate-600 flex-shrink-0 tracking-wider">
-            HELENA SYSTEM © 2026 - TODOS DIREITOS RESERVADOS JOSÉ DIVINO PRADO DA LAPA.
-        </footer>
-    </div>
-
-    <!-- MODAL DE DETALHES DO BAÚ ATIVO -->
-    <div id="active-chest-modal" class="fixed inset-0 bg-[#020617]/95 z-50 hidden flex items-center justify-center p-4 backdrop-blur-md">
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full shadow-2xl relative">
-            <button onclick="fecharModalBau()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xs font-black">FECHAR X</button>
-            
-            <div class="mb-4">
-                <span class="text-[8px] text-cyan-400 block uppercase tracking-widest leading-none mb-1">DETALHES DO BAÚ ATIVO</span>
-                <h2 class="text-base font-black text-white uppercase tracking-wider" id="mission-title">Missão</h2>
-                <p class="text-[10px] text-slate-400 mt-1" id="mission-desc">Descrição</p>
-            </div>
-
-            <!-- MONITOR DE LEITURA PX -->
-            <div class="relative w-full aspect-video bg-black border border-slate-800 rounded-xl overflow-hidden flex items-center justify-center mb-4">
-                <div id="scanner-laser" class="absolute left-0 right-0 h-0.5 scanner-line z-30 shadow-[0_0_15px_#06b6d4]"></div>
-                <img id="mission-image" src="" alt="Missão" class="w-full h-full object-cover opacity-60 z-10">
-            </div>
-
-            <div class="space-y-4">
-                <div id="px-container" class="bg-black border border-slate-800 p-3 rounded-xl flex justify-between items-center">
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
                     <div>
-                        <span class="text-[8px] text-slate-400 block uppercase">Código de Validação PX</span>
-                        <span class="text-sm font-black text-[#fde047] tracking-widest" id="px-id-display">NENHUM</span>
+                        <p class="text-xs font-bold text-white">Reivindicação Diária</p>
+                        <p class="text-[9px] text-slate-400">Ganhe moedas a cada 24 horas</p>
                     </div>
-                    <span class="text-[8px] text-cyan-400 font-bold border border-cyan-500/30 px-2 py-1 rounded bg-cyan-500/5">ID ATIVO</span>
+                    <button id="btn-missao-diaria" onclick="reivindicarDiario()" class="bg-[#fde047] text-black font-black text-[10px] px-3 py-1.5 rounded uppercase">Resgatar +5</button>
                 </div>
-
-                <div id="status-display-box" class="bg-black border border-slate-800 p-3 rounded-xl text-center">
-                    <span class="text-[8px] text-slate-400 block uppercase">STATUS DO COMPROVANTE</span>
-                    <span class="text-xs font-black text-white tracking-wider uppercase" id="status-text">NENHUM ENVIADO</span>
-                </div>
-
-                <div class="space-y-3">
-                    <button onclick="gerarECompartilharCanvas()" id="btn-share" class="w-full bg-[#fde047] text-black hover:opacity-90 font-black py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-xs tracking-wider uppercase">
-                        <i class="fab fa-whatsapp text-base"></i> COMPARTILHAR MISSÃO
-                    </button>
-
-                    <!-- CONTÊINER DE UPLOAD - SEMPRE VISÍVEL QUANDO O BAÚ FOR ACESSADO -->
-                    <div id="proof-upload-container" class="block">
-                        <label id="label-proof" for="proof-upload" class="w-full bg-cyan-500/10 hover:bg-cyan-500/20 border-2 border-dashed border-cyan-500/30 text-cyan-400 font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-center text-xs animate-pulse tracking-wider uppercase">
-                            <i class="fas fa-camera"></i> ENVIAR PRINT DO COMPROVANTE
-                        </label>
-                        <input type="file" id="proof-upload" accept="image/*" class="hidden" onchange="uploadProof(event)">
+                                                                                                  
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+                    <div>
+                        <p class="text-xs font-bold text-white">Seguir Canal do Criador</p>
+                        <p class="text-[9px] text-slate-400">Apoie a engenharia de elite</p>
                     </div>
+                    <button id="btn-missao-seguir" onclick="completarMissaoRede(10)" class="bg-cyan-500 text-black font-black text-[10px] px-3 py-1.5 rounded uppercase">Seguir +10</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DO CERTIFICADO GERADO EM CANVAS -->
-    <div id="certificate-modal" class="fixed inset-0 bg-[#020617]/95 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border-2 border-cyan-500 p-6 rounded-2xl max-w-lg w-full text-center glow-cyan">
-            <h3 class="text-[#fde047] font-black text-lg mb-1 tracking-wider">🎉 PARABÉNS! VOCÊ CONCLUIU</h3>
-            <p class="text-[10px] text-slate-400 mb-4">SUA JORNADA DE MISSÕES ESTÁ COMPLETA</p>
-            
-            <div class="border border-slate-800 rounded-xl p-2 mb-4 bg-black flex items-center justify-center">
-                <canvas id="certificate-canvas" class="max-w-full h-auto rounded-lg border border-slate-800"></canvas>
+    <!-- MOTOR DO RECIBO SUPREME -->
+    <div id="modal-supreme" class="modal-industrial">
+        <div class="flex flex-col items-center gap-4 w-full">
+            <div id="print-area" class="recibo-area">
+                <div class="text-center mb-4">
+                    <img id="img-motor-comprovante" src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780391398310_1776103715509.png" class="w-16 h-16 mx-auto mb-2 rounded-full border-2 border-[#06b6d4] object-cover">
+                    <h2 class="font-black text-base tracking-widest text-[#fde047]">DONY BURGUER'S</h2>
+                    <p class="text-[9px] text-slate-400"> JDP TECNOLOGIA INDUSTRIAL</p>
+                    <p class="text-[10px] font-bold text-cyan-400 mt-1" id="id-pedido-display">ID: #00000</p>
+                </div>
+                                                                                                  
+                <div class="border-t border-dashed border-slate-700 my-3"></div>
+                                                                                                  
+                <div id="comp-itens-list" class="text-[11px] space-y-1.5"></div>
+                                                                                                  
+                <div class="border-t border-dashed border-slate-700 my-3"></div>
+                                                                                                  
+                <div class="flex justify-between items-center text-[11px]">
+                    <span class="text-slate-400 font-bold">VALOR DOS PRODUTOS:</span>
+                    <span class="text-white" id="comp-subtotal">R$ 0,00</span>
+                </div>
+                <div id="comp-desconto-row" class="flex justify-between items-center text-[11px] text-red-400 hidden">
+                    <span class="font-bold">DESCONTO DONYCOINS:</span>
+                    <span id="comp-desconto">-R$ 0,00</span>
+                </div>
+                <div class="flex justify-between items-center mt-1">
+                    <span class="text-[11px] text-slate-300 font-bold">TOTAL A PAGAR:</span>
+                    <span class="text-xs font-black text-[#fde047]" id="comp-total">R$ 0,00</span>
+                </div>
+
+                <div class="border-t border-dashed border-slate-700 my-3"></div>
+                                                                                                  
+                <div class="text-[10px] uppercase space-y-1 text-slate-300">
+                    <p><strong class="text-cyan-400">CLIENTE:</strong> <span id="comp-cliente-nome"></span></p>
+                    <p><strong class="text-cyan-400">CONTATO:</strong> <span id="comp-cliente-phone"></span></p>
+                    <p><strong class="text-cyan-400">ENTREGA:</strong> <span id="comp-cliente-end"></span></p>
+                </div>
+                                                                                                  
+                <div class="border-t border-dashed border-slate-700 my-3"></div>
+                                                                                                  
+                <div class="text-center italic text-[10px] text-[#fde047] font-bold py-1" id="txt-evangelico"></div>
+                                                                                                  
+                <p class="text-[8px] text-center mt-2 text-slate-500 font-mono" id="data-recibo"></p>
+                <div class="text-[7px] text-center text-cyan-500/50 mt-1">AUTENTICAÇÃO PROTOCOLO JDP-PX</div>
             </div>
 
-            <div class="flex gap-3">
-                <button onclick="claimPrize()" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition">
-                    <i class="fab fa-whatsapp"></i> BAIXAR TICKET & RESGATAR PRÊMIO
+            <button id="btn-envio-final" onclick="processarSaidaIndustrial()" class="w-full max-w-[350px] bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-xl uppercase flex items-center justify-center gap-2 tracking-widest text-xs transition">
+                <i class="fab fa-whatsapp"></i> ENVIAR PEDIDO AO WHATSAPP
+            </button>
+            <button onclick="fecharModalRecibo()" class="text-slate-400 hover:text-white text-xs font-bold tracking-widest uppercase">CANCELAR</button>
+        </div>
+    </div>
+
+    <!-- HEADER (BLINDADO CONTRA DESALINHAMENTO) -->
+    <header class="p-4 flex justify-between items-center sticky top-0 bg-[#020617] z-50 border-b border-slate-900 gap-2">
+        <!-- LADO ESQUERDO: MENU E TÍTULO -->
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div class="relative inline-block text-left flex-shrink-0">
+                <button onclick="toggleMenu()" class="text-slate-400 hover:text-cyan-400 text-lg p-1 focus:outline-none">
+                    <i class="fas fa-ellipsis-v"></i>
                 </button>
+                <div id="dropdown-menu" class="hidden absolute left-0 mt-2 w-32 rounded-xl bg-[#0f172a] border border-[#06b6d4]/40 shadow-xl py-1 z-[6000]">
+                    <button onclick="deslogarSistema()" class="w-full text-left px-4 py-2.5 text-xs font-black text-red-400 hover:bg-slate-900 flex items-center gap-2">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </button>
+                </div>
             </div>
+
+            <div class="min-w-0">
+                <h1 class="text-sm sm:text-xl font-black italic tracking-wider sm:tracking-widest text-[#fde047] truncate">DONY BURGUER'S</h1>
+                <p class="text-[7px] sm:text-[8px] text-cyan-500 tracking-wider truncate">INDUSTRIAL PLATFORM</p>
+            </div>
+        </div>
+                                                  
+        <!-- LADO DIREITO: MOEDAS E CARRINHO (BLOQUEADOS CONTRA EXPULSÃO) -->
+        <div class="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+            <!-- CAIXA DE MOEDAS OTIMIZADA COM FORMATO PADRÃO R$ 99,01 -->
+            <div onclick="abrirMissoes()" class="flex items-center gap-1 bg-slate-900 px-2.5 py-1.5 rounded-full border border-slate-800 cursor-pointer hover:border-[#fde047] transition flex-shrink-0">
+                <i class="fas fa-coins text-[10px] sm:text-[11px] text-[#fde047]"></i>
+                <span id="coin-count" class="text-[10px] sm:text-xs font-black text-white">R$ 0,00</span>
+            </div>
+
+            <!-- BOTÃO DO CARRINHO ESTÁVEL -->
+            <div onclick="toggleCartScreen()" class="relative bg-slate-900 p-2 sm:p-2.5 rounded-xl border border-slate-800 cursor-pointer flex-shrink-0">
+                🛒 <span id="cart-count" class="absolute -top-1 -right-1 bg-cyan-500 text-[8px] sm:text-[9px] w-4 sm:w-4.5 h-4 sm:h-4.5 flex items-center justify-center rounded-full text-black font-black">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- TELA DO CARRINHO -->
+    <div id="cart-screen" class="hidden fixed inset-0 z-[5000] bg-[#020617] p-5 overflow-y-auto">
+        <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
+            <h2 class="text-[#fde047] font-black italic tracking-wider">MEU PEDIDO</h2>
+            <button onclick="toggleCartScreen()" class="text-slate-400 font-bold uppercase text-xs">VOLTAR</button>
+        </div>
+        <div id="cart-items-list" class="space-y-3 mb-6"></div>
+                                                  
+        <!-- SELEÇÃO DE DESCONTO DONYCOINS -->
+        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 mb-4 flex justify-between items-center">
+            <div>
+                <p class="text-xs font-bold text-white">Pagar com DonyCoins?</p>
+                <p class="text-[9px] text-slate-400">Saldo disponível: <span id="checkout-coin-balance" class="text-[#fde047] font-bold">R$ 0,00</span></p>
+            </div>
+            <input type="checkbox" id="usar-donycoins" onchange="calcularPrecoFinal()" class="w-6 h-6 rounded border-slate-700 bg-slate-800 accent-cyan-500 cursor-pointer flex-shrink-0">
+        </div>
+
+        <div class="bg-[#0f172a] p-5 rounded-2xl border border-slate-900 cyan-glow">
+            <p id="cart-total" class="text-xl font-black text-white mb-4">TOTAL: R$ 0,00</p>
+            <button onclick="verificarFluxoCadastro()" class="w-full bg-[#fde047] text-black font-black py-4 rounded-xl uppercase text-xs tracking-widest">
+                Gerar Comprovante
+            </button>
         </div>
     </div>
 
-    <!-- ALERTA FLUTUANTE DE SUCESSO -->
-    <div id="floating-level-alert" class="fixed left-1/2 top-1/3 -translate-x-1/2 bg-slate-900 border-2 border-cyan-500 text-center p-6 rounded-2xl glow-cyan z-50 hidden w-[90%] max-w-sm">
-        <i class="fas fa-trophy text-4xl text-yellow-300 mb-2 animate-bounce"></i>
-        <h3 class="text-lg font-black text-white uppercase tracking-wider">Excelente, Operador!</h3>
-        <p class="text-[#fde047] text-xs font-black uppercase mt-1">Você subiu de nível!</p>
-        <p class="text-[10px] text-slate-400 mt-2">O próximo baú da sua esteira foi liberado com sucesso.</p>
+    <!-- PRINCIPAL -->
+    <main class="px-4">
+        <div class="slider-container">
+            <div id="sliderTrack" class="slider-track"></div>
+        </div>
+
+        <!-- BOTÕES FLUTUANTES DIRECIONAIS -->
+        <a id="btn-logo" class="btn-flutuante" target="_blank">
+            <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780390549433_IMG_20260602_WA0019.jpg" class="rounded-full w-10 h-10 object-cover">
+        </a>
+        <a id="btn-Jogo" class="btn-flutuante" target="_blank">
+            <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/media/jdp_1780390793766_op.gif" class="rounded-full w-10 h-10 object-cover">
+        </a>
+        <a id="btn-Chat" class="btn-flutuante">
+            <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780281835705______.gif" class="rounded-full w-10 h-10 object-cover">
+        </a>
+
+        <!-- CATEGORIAS -->
+        <div class="flex gap-7 overflow-x-auto py-8 no-scrollbar">
+            <span class="category-item category-active" id="cat-todos" onclick="filterCategory('todos', this)">Todos</span>
+            <span class="category-item" id="cat-burguer" onclick="filterCategory('burguer', this)">Burguers</span>
+            <span class="category-item" id="cat-bebida" onclick="filterCategory('bebida', this)">Bebidas</span>
+            <span class="category-item" id="cat-combo" onclick="filterCategory('combo', this)">Combos</span>
+        </div>
+
+        <!-- VITRINE DE PRODUTOS JDP EXATA -->
+        <div id="product-grid" class="grid-vendas text-slate-100"></div>
+    </main>
+
+    <!-- BOTTOM BAR -->
+    <nav class="bottom-nav">
+        <div onclick="location.reload()" class="flex flex-col items-center text-cyan-400 cursor-pointer">
+            <span class="text-xl">🏠</span>
+            <span class="text-[9px] font-black uppercase mt-1">Início</span>
+        </div>
+        <div onclick="toggleCartScreen()" class="flex flex-col items-center text-slate-500 cursor-pointer">
+            <span class="text-xl">🛒</span>
+            <span class="text-[9px] font-black uppercase mt-1">Carrinho</span>
+        </div>
+        <div onclick="abrirPagamentoPix()" class="flex flex-col items-center text-slate-500 cursor-pointer">
+            <span class="text-xl">⚡</span>
+            <span class="text-[9px] font-black uppercase mt-1 text-cyan-400">PAGAMENTO PIX</span>
+        </div>
+    </nav>
+
+    <!-- MODAL DE DETALHES -->
+    <div id="product-modal" class="hidden fixed inset-0 z-[4000] bg-slate-950/95 backdrop-blur-md p-5 flex flex-col justify-center">
+        <button onclick="closeModal()" class="absolute top-5 right-5 text-slate-500 font-bold text-sm tracking-wider">FECHAR X</button>
+        <div class="flex flex-col gap-4 max-w-sm mx-auto w-full relative">
+            <!-- Glass Shield no Modal de Detalhes também para blindagem total -->
+            <div class="glass-shield rounded-2xl"></div>
+            <img id="modal-img" src="" class="w-full h-64 object-contain bg-black rounded-2xl border border-slate-800 cyan-glow">
+            <h2 id="modal-nome" class="text-2xl font-black text-white italic"></h2>
+            <p id="modal-preco" class="text-xl font-black text-[#fde047]"></p>
+            <button onclick="handleAddToCartFromModal()" style="position: relative; z-index: 10;" class="mt-4 bg-[#fde047] text-black font-black py-4 rounded-xl uppercase text-xs tracking-widest transition hover:opacity-95">
+                Adicionar ao Carrinho
+            </button>
+        </div>
     </div>
 
-    <!-- HELENA ENGINE LOGIC -->
+    <!-- SCRIPT DE INTELIGÊNCIA UNIFICADO COM DONYBANK LEDGER INTEGRATION -->
     <script>
         const LOJA_ID = "LEOVARDIOS_burguer_2026";
         const CHIP_DESTINO = "5592984846058";
-        
+        const LEDGER_PATH = `lojas/${LOJA_ID}/DonyCoins/ledger`;
+        const MASTER_TETO = 1000;
+
         const firebaseConfig = { 
-            apiKey: "AIzaSyCEdXF7ScnMYz0Ce0OW-B_UJ8Bm5Pl9m8o",
-            databaseURL: "https://dony-burguers-default-rtdb.firebaseio.com" 
+             apiKey: "AIzaSyCEdXF7ScnMYz0Ce0OW-B_UJ8Bm5Pl9m8o",
+             databaseURL: "https://dony-burguers-default-rtdb.firebaseio.com"
         };
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
-        const BA_FECHADO_IMG = "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780228893372_Engenheiro_Transparente__2_.png";
-        const BA_ABERTO_IMG = "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775712652_Engenheiro_Transparente.png";
-
-        let clientSession = null;
-        let missionsConfig = {};
-        let playedDestruction = false;
-        let cachedUserDataForCelebration = null;
-        
-        let state = {
-            currentUnlocked: 1,
-            activeChest: null,
-            activePXID: null,
-            idGenerationTime: null
-        };
-
-        const bannerData = [
-            { img: "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780240623862_1779137773417.png", text: "CENTRAL DE MISSÕES JDP" },
-            { img: "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780099661699_IMG_20260529_WA0017.jpg", text: "ECOSSISTEMA INTEGRADO" }
+        const FOTO_ERRO = "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1777445586772_1776103643639.png";
+        const frases = [
+            "O SENHOR É MEU PASTOR, NADA ME FALTARÁ.", 
+            "TUDO POSSO NAQUELE QUE ME FORTALECE.", 
+            "DEUS É FIEL E JUSTO.", 
+            "A PAZ DO SENHOR JESUS ESTEJA COM VOCÊ."
         ];
 
-        function verificarSeloSeguranca() {
-            return true;
+        let produtosFirebase = [];
+        let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+        let idPedidoAtual = "";
+        let donycoinsUsuario = 0;
+        let subtotalPedido = 0;
+        let valorDesconto = 0;
+        let totalComDesconto = 0;
+        let totalCirculanteGlobal = 0;
+        let linkPagamentoPix = "";
+        let categoriaAtiva = "todos";
+
+        const bannerData = [
+            { img: "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780392132065_IMG_20260602_WA0022.jpg", text: "DONY BURGUER - DESDE 2017" },
+            { img: "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780391861855_IMG_20260602_WA0023.jpg", text: "COMBOS EXCLUSIVOS JDP" },
+            { img: "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780391861855_IMG_20260602_WA0023.jpg", text: "COMBOS EXCLUSIVOS JDP" }
+        ];
+
+        function monitorarConexao() {
+            const statusTxt = document.getElementById('loading-status-text');
+            const loader = document.getElementById('loading-supreme');
+
+            if (!navigator.onLine) {
+                statusTxt.innerText = "SEM CONEXÃO - AGUARDANDO REDE...";
+                statusTxt.style.color = "#ef4444";
+                statusTxt.style.animation = "pulse 0.8s infinite";
+                loader.style.display = 'flex';
+            } else {
+                statusTxt.innerText = "SINCRONIZANDO NAVE...";
+                statusTxt.style.color = "#fde047";
+                statusTxt.style.animation = "pulse 1.5s infinite";
+            }
         }
 
+        window.addEventListener('online', monitorarConexao);
+        window.addEventListener('offline', monitorarConexao);
+
         window.onload = () => {
-            if (!verificarSeloSeguranca()) return;
+            monitorarConexao();
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const whatsSalvo = urlParams.get('u') || localStorage.getItem('jdp_cliente_whatsapp');
-            const nomeSalvo = localStorage.getItem('jdp_cliente_nome') || "OPERADOR AUTOMÁTICO";
-            const endSalvo = localStorage.getItem('jdp_cliente_endereco') || "ENTREGA PADRÃO";
+            const nomeSalvo = localStorage.getItem('jdp_cliente_nome');
+            const whatsSalvo = localStorage.getItem('jdp_cliente_whatsapp');
 
-            if (whatsSalvo) {
-                clientSession = { name: nomeSalvo, phone: whatsSalvo, address: endSalvo };
-                localStorage.setItem('jdp_cliente_whatsapp', whatsSalvo);
-                document.getElementById('login-screen').style.display = 'none';
-                document.documentElement.classList.add('session-active');
-                initMissions();
-                syncClientState(whatsSalvo);
+            if (nomeSalvo && whatsSalvo) {
+                document.getElementById('modal-cadastro').style.display = 'none';
+                vincularUsuarioFirebase(whatsSalvo);
             } else {
-                document.getElementById('login-screen').style.display = 'flex';
-                initMissions();
+                document.getElementById('modal-cadastro').style.display = 'flex';
+                alternarAbaAuth('login');
             }
+
+            db.ref('lojas/' + LOJA_ID + '/cardapio').on('value', snap => {
+                const data = snap.val();
+                produtosFirebase = data ? Object.entries(data).map(([id, val]) => ({ id, ...val })) : [];
+                renderGrid(categoriaAtiva);
+                                              
+                if (navigator.onLine) {
+                    setTimeout(() => {
+                        document.getElementById('loading-supreme').style.display = 'none';
+                    }, 3000);
+                }
+            });
+
+            db.ref(`lojas/${LOJA_ID}/config_motor_recibo`).on('value', snap => {
+                const link = snap.val();
+                if(link) {
+                    document.getElementById('img-motor-comprovante').src = link;
+                }
+            });
+
+            db.ref(`lojas/${LOJA_ID}/config_pix_link`).on('value', snap => {
+                const link = snap.val();
+                if(link) {
+                    linkPagamentoPix = link;
+                }
+            });
+
+            db.ref(LEDGER_PATH).on('value', snap => {
+                const ledger = snap.val() || {};
+                totalCirculanteGlobal = 0;
+                Object.values(ledger).forEach(b => {
+                    if (b.type === "EMISSAO" || b.type === "RECOMPENSA") {
+                        totalCirculanteGlobal += b.amount;
+                    } else if (b.type === "DEBITO" || b.type === "COMPRA") {
+                        totalCirculanteGlobal -= b.amount;
+                    }
+                });
+                monitorarRestricaoTeto();
+            });
 
             renderBanners();
             startBannerRotation();
-            initInactivityEngine();
-            initLeaderboardTickerEngine();
+            atualizarLinksComUsuario();
+            updateCartUI();
         };
 
-        // ================================================================= -->
-        //  SISTEMA DE DETECÇÃO DE INATIVIDADE & MOVIMENTO INDUSTRIAL (30S)                  
-        // ================================================================= -->
-        let inactivityTimer = null;
-        let gamesEngineInterval = null;
-
-        function initInactivityEngine() {
-            const activityEvents = ['mousemove', 'mousedown', 'touchstart', 'touchmove', 'click', 'scroll'];
-            activityEvents.forEach(evt => {
-                window.addEventListener(evt, resetInactivityTimer, { passive: true });
-            });
-            resetInactivityTimer();
+        async function gerarHashBloco(index, timestamp, sender, receiver, amount, prevHash) {
+            const blockData = `${index}-${timestamp}-${sender}-${receiver}-${amount}-${prevHash}`;
+            const msgBuffer = new TextEncoder().encode(blockData);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        function resetInactivityTimer() {
-            if (gamesEngineInterval) {
-                clearInterval(gamesEngineInterval);
-                gamesEngineInterval = null;
-                
-                const container = document.getElementById('games-scroll-container');
-                if (container) {
-                    const cards = container.querySelectorAll('a');
-                    cards.forEach(card => card.classList.remove('vibrate-card-active'));
+        async function registrarTransacaoLedgerCliente(sender, receiver, amount, type, reason) {
+            const snap = await db.ref(LEDGER_PATH).get();
+            const ledger = snap.val() || {};
+            const index = Object.keys(ledger).length;
+
+            if (type === "EMISSAO" || type === "RECOMPENSA") {
+                if (totalCirculanteGlobal + amount > MASTER_TETO) {
+                    alert("LIMITE EXCEDIDO: O DonyBank atingiu o teto de 1000 moedas em circulação.");
+                    throw new Error("TETO_EXCEDIDO");
                 }
             }
 
-            if (inactivityTimer) {
-                clearTimeout(inactivityTimer);
+            const prevBlock = ledger[index - 1] || { hash: "00000000000000000000000000000000" };
+            const timestamp = Date.now();
+            const hash = await gerarHashBloco(index, timestamp, sender, receiver, amount, prevBlock.hash);
+
+            const novoBloco = {
+                index,
+                timestamp,
+                sender,
+                receiver,
+                amount,
+                type,
+                reason,
+                prevHash: prevBlock.hash,
+                hash
+            };
+
+            await db.ref(`${LEDGER_PATH}/${index}`).set(novoBloco);
+            return novoBloco;
+        }
+
+        function monitorarRestricaoTeto() {
+            const btnDiario = document.getElementById('btn-missao-diaria');
+            const btnSeguir = document.getElementById('btn-missao-seguir');
+
+            if (totalCirculanteGlobal >= MASTER_TETO) {
+                if(btnDiario) btnDiario.disabled = true;
+                if(btnSeguir) btnSeguir.disabled = true;
+                if(btnDiario) btnDiario.innerText = "TETO EXCEDIDO";
+                if(btnSeguir) btnSeguir.innerText = "TETO EXCEDIDO";
+            } else {
+                if(btnDiario) btnDiario.disabled = false;
+                if(btnSeguir) btnSeguir.disabled = false;
+            }
+        }
+
+        async function salvarCadastroLocal() {
+            const n = document.getElementById('cad-nome').value.trim();
+            const w = document.getElementById('cad-whatsapp').value.replace(/\D/g, "");
+            const e = document.getElementById('cad-endereco').value.trim();
+
+            if (!n || !w || !e) return alert("PREENCHA TODOS OS CAMPOS!");
+
+            localStorage.setItem('jdp_cliente_nome', n);
+            localStorage.setItem('jdp_cliente_whatsapp', w);
+            localStorage.setItem('jdp_cliente_endereco', e);
+
+            db.ref(`lojas/${LOJA_ID}/usuarios/${w}`).get().then(async (snap) => {
+                if (!snap.exists()) {
+                    try {
+                        await registrarTransacaoLedgerCliente("CRIADOR_JDP", w, 10, "RECOMPENSA", "BÔNUS DE BOAS-VINDAS");
+                                                                                                                          
+                        await db.ref(`lojas/${LOJA_ID}/usuarios/${w}`).set({
+                            nome: n.toUpperCase(),
+                            whatsapp: w,
+                            endereco: e.toUpperCase(),
+                            donycoins: 10,
+                            status_cadastro: "aprovado",
+                            data_cadastro: Date.now()
+                        });
+                    } catch (err) {
+                        await db.ref(`lojas/${LOJA_ID}/usuarios/${w}`).set({
+                            nome: n.toUpperCase(),
+                            whatsapp: w,
+                            endereco: e.toUpperCase(),
+                            donycoins: 0,
+                            status_cadastro: "aprovado",
+                            data_cadastro: Date.now()
+                        });
+                        alert("CONTA ATIVADA! O banco atingiu o teto de 1000 moedas, sua conta iniciou com 0 DonyCoins.");
+                    }
+                }
+                vincularUsuarioFirebase(w);
+                document.getElementById('modal-cadastro').style.display = 'none';
+            });
+        }
+
+        async function reivindicarDiario() {
+            const whats = localStorage.getItem('jdp_cliente_whatsapp');
+            const ultimaReivindicacao = localStorage.getItem('jdp_last_claim') || 0;
+            const agora = Date.now();
+
+            if (agora - ultimaReivindicacao < 24 * 60 * 60 * 1000) {
+                const horasRestantes = Math.ceil((24 * 60 * 60 * 1000 - (agora - ultimaReivindicacao)) / (1000 * 60 * 60));
+                return alert(`Aguarde mais ${horasRestantes} horas para resgatar novamente!`);
             }
 
-            inactivityTimer = setTimeout(startAutomaticGamesEngine, 30000);
+            try {
+                await registrarTransacaoLedgerCliente("CRIADOR_JDP", whats, 5, "RECOMPENSA", "REIVINDICAÇÃO DIÁRIA");
+                                                                                  
+                db.ref(`lojas/${LOJA_ID}/usuarios/${whats}/donycoins`).set(donycoinsUsuario + 5).then(() => {
+                    localStorage.setItem('jdp_last_claim', agora);
+                    alert("SUCESSO! +5 DONYCOINS ADICIONADOS AO LIVRO-RAZÃO!");
+                });
+            } catch (err) {
+                alert("Erro ao resgatar moedas. Teto do banco atingido.");
+            }
         }
 
-        function startAutomaticGamesEngine() {
-            const container = document.getElementById('games-scroll-container');
-            if (!container) return;
-            
-            const cards = container.querySelectorAll('a');
-            if (cards.length === 0) return;
-
-            let activeIdx = 0;
-
-            gamesEngineInterval = setInterval(() => {
-                cards.forEach(card => card.classList.remove('vibrate-card-active'));
-                
-                if (cards[activeIdx]) {
-                    cards[activeIdx].classList.add('vibrate-card-active');
-                    
-                    const cardOffset = cards[activeIdx].offsetLeft;
-                    const containerHalfWidth = container.clientWidth / 2;
-                    const cardHalfWidth = cards[activeIdx].clientWidth / 2;
-                    
-                    container.scrollTo({
-                        left: cardOffset - containerHalfWidth + cardHalfWidth,
-                        behavior: 'smooth'
-                    });
-                }
-                
-                activeIdx = (activeIdx + 1) % cards.length;
-            }, 1800);
+        async function completarMissaoRede(moedas) {
+            const whats = localStorage.getItem('jdp_cliente_whatsapp');
+            try {
+                await registrarTransacaoLedgerCliente("CRIADOR_JDP", whats, moedas, "RECOMPENSA", "MISSÃO SEGUIR CRIADOR JDP");
+                                                                                  
+                db.ref(`lojas/${LOJA_ID}/usuarios/${whats}/donycoins`).set(donycoinsUsuario + moedas).then(() => {
+                    window.open("https://pradodalapa-hue.github.io/JDPSistemasStatusrtyss688jfdssyiihfd/?u=" + whats, "_blank");
+                    alert(`OBRIGADO POR SEGUIR! +${moedas} DONYCOINS ADICIONADAS AO LIVRO-RAZÃO.`);
+                });
+            } catch (err) {
+                alert("Erro ao resgatar recompensa. Teto do banco atingido.");
+            }
         }
 
-        // ================================================================= -->
-        //  MOTOR DE SINCRONIZAÇÃO E ROTAÇÃO DO RANKING (DE BAIXO PARA CIMA)
-        // ================================================================= -->
-        let tickerIdx = 0;
-        function initLeaderboardTickerEngine() {
-            db.ref(`lojas/${LOJA_ID}/usuarios`).on('value', snap => {
-                const usersData = snap.val();
-                if (!usersData) return;
-
-                const sortedUsers = Object.keys(usersData).map(phone => {
-                    return {
-                        id: phone,
-                        ...usersData[phone]
-                    };
-                }).sort((a, b) => (b.donycoins || 0) - (a.donycoins || 0));
-
-                renderLeaderboardTicker(sortedUsers);
-            });
-
-            setInterval(() => {
-                const content = document.getElementById('leaderboard-ticker-content');
-                if (!content) return;
-                const items = content.children;
-                if (items.length <= 1) return;
-
-                tickerIdx = (tickerIdx + 1) % items.length;
-                const yOffset = tickerIdx * 28; 
-                content.style.transform = `translateY(-${yOffset}px)`;
-            }, 3000);
-        }
-
-        function renderLeaderboardTicker(users) {
-            const content = document.getElementById('leaderboard-ticker-content');
-            if (!content) return;
-
-            const topUsers = users.slice(0, 10);
-
-            if (topUsers.length === 0) {
-                content.innerHTML = `
-                    <div class="h-7 flex items-center justify-center text-[7px] text-slate-500 font-mono uppercase tracking-wider w-full">
-                        Nenhum Operador Ativo
-                    </div>`;
+        function abrirPagamentoPix() {
+            const whats = localStorage.getItem('jdp_cliente_whatsapp');
+            if (!whats) {
+                alert("SISTEMA JDP: Por favor, faça login ou crie sua conta para acessar o Pagamento PIX.");
+                document.getElementById('modal-cadastro').style.display = 'flex';
+                alternarAbaAuth('login');
                 return;
             }
 
-            content.innerHTML = topUsers.map((u, idx) => {
-                let medal = `${idx + 1}º`;
-                if (idx === 0) medal = "👑 1º";
-                if (idx === 1) medal = "🥈 2º";
-                if (idx === 2) medal = "🥉 3º";
+            if (linkPagamentoPix && linkPagamentoPix.trim() !== "") {
+                let urlFinal;
+                try {
+                    const urlObj = new URL(linkPagamentoPix);
+                    urlObj.searchParams.set('u', whats);
+                    urlObj.searchParams.set('origem', 'whatsapp');
+                    urlFinal = urlObj.toString();
+                } catch (e) {
+                    const separator = linkPagamentoPix.includes('?') ? '&' : '?';
+                    urlFinal = `${linkPagamentoPix}${separator}u=${whats}&origem=whatsapp`;
+                }
+                window.open(urlFinal, "_blank");
+            } else {
+                alert("HELENA: O link de pagamento PIX ainda não foi configurado pelo Criador no painel de administração.");
+            }
+        }
 
-                return `
-                    <div class="h-7 flex items-center justify-between text-[7px] text-white font-mono uppercase tracking-wider w-full flex-shrink-0">
-                        <span class="font-bold flex items-center gap-1.5 text-slate-300">
-                            <span class="text-[#fde047]">${medal}</span> ${u.nome}
-                        </span>
-                        <span class="text-cyan-400 font-black">R$ ${(u.donycoins || 0).toFixed(2)}</span>
-                    </div>`;
-            }).join('');
+        async function processarSaidaIndustrial() {
+            const btn = document.getElementById('btn-envio-final');
+            btn.innerHTML = "DISPARANDO SISTEMAS...";
+            btn.disabled = true;
 
-            tickerIdx = 0;
-            content.style.transform = `translateY(0px)`;
+            const nomeCliente = localStorage.getItem('jdp_cliente_nome');
+            const endCliente = localStorage.getItem('jdp_cliente_endereco');
+            const whatsCliente = localStorage.getItem('jdp_cliente_whatsapp');
+
+            const dadosPedidoFirebase = {
+                id_protocolo: idPedidoAtual,
+                mesa: `DELIVERY: ${nomeCliente.toUpperCase()}`,
+                status: "Pendente",
+                subtotal: subtotalPedido,
+                desconto_aplicado: valorDesconto,
+                total: totalComDesconto,
+                timestamp: Date.now(),
+                itens: carrinho,
+                giro_usado: false,
+                validado_pdv: false
+            };
+
+            try {
+                if (valorDesconto > 0) {
+                    await registrarTransacaoLedgerCliente(whatsCliente, "CRIADOR_JDP", valorDesconto, "COMPRA", `DESCONTO COMPRA PEDIDO #${idPedidoAtual}`);
+                }
+
+                await db.ref(`lojas/${LOJA_ID}/producao_pendente/${idPedidoAtual}`).set(dadosPedidoFirebase);
+                await db.ref(`lojas/${LOJA_ID}/rastreio_ativo/${idPedidoAtual}`).set(dadosPedidoFirebase);
+
+                const novoSaldo = donycoinsUsuario - valorDesconto;
+                await db.ref(`lojas/${LOJA_ID}/usuarios/${whatsCliente}/donycoins`).set(novoSaldo);
+
+                const canvas = await html2canvas(document.getElementById('print-area'), {
+                    backgroundColor: "#000000",
+                    scale: 2,
+                    useCORS: true
+                });
+                                                                                                                      
+                const imgData = canvas.toDataURL("image/png");
+
+                let msg = `*🆔 ID DO PEDIDO: #${idPedidoAtual}*\n`;
+                msg += `------------------------------------------\n\n`;
+                msg += `*🔥 DETALHES DO PEDIDO*\n`;
+                msg += `👤 *CLIENTE:* ${nomeCliente.toUpperCase()}\n`;
+                msg += `📍 *LOCAL:* ${endCliente.toUpperCase()}\n\n`;
+                carrinho.forEach(i => { msg += `✅ ${i.qtd}x ${i.nome}\n`; });
+                if (valorDesconto > 0) {
+                    msg += `\n*DESCONTO DONYCOINS:* -R$ ${valorDesconto.toFixed(2)}\n`;
+                }
+                msg += `\n*TOTAL FINAL: R$ ${totalComDesconto.toFixed(2)}*\n\n`;
+                msg += `*⚠️ ATENÇÃO:* Guarde seu ID para rodar a Roleta da Sorte!`;
+
+                canvas.toBlob(async (blob) => {
+                    const file = new File([blob], `PEDIDO_${idPedidoAtual}.png`, { type: "image/png" });
+                                                                                                                                                 
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Comprovante Dony Burguer',
+                                text: msg
+                            });
+                            window.location.href = `https://wa.me/${CHIP_DESTINO}?text=${encodeURIComponent(msg)}`;
+                        } catch (shareErr) {
+                            dispararFallbackDownload(imgData, msg);
+                        }
+                    } else {
+                        dispararFallbackDownload(imgData, msg);
+                    }
+                }, "image/png");
+
+                carrinho = [];
+                localStorage.setItem('carrinho', JSON.stringify(carrinho));
+                updateCartUI();
+                fecharModalRecibo();
+                toggleCartScreen();
+
+            } catch (err) {
+                alert("ERRO INDUSTRIAL DE TRANSMISSÃO. DISPARANDO FALLBACK WHATSAPP.");
+                window.location.href = `https://wa.me/${CHIP_DESTINO}?text=Erro%20Comprovante%20ID%20${idPedidoAtual}`;
+            } finally {
+                btn.innerHTML = `<i class="fab fa-whatsapp"></i> ENVIAR PEDIDO AGORA`;
+                btn.disabled = false;
+            }
+        }
+
+        function alternarAbaAuth(aba) {
+            const loginView = document.getElementById('auth-login-view');
+            const cadastroView = document.getElementById('auth-cadastro-view');
+            const tabLogin = document.getElementById('btn-tab-login');
+            const tabCadastro = document.getElementById('btn-tab-cadastro');
+
+            if (aba === 'login') {
+                loginView.classList.remove('hidden');
+                cadastroView.classList.add('hidden');
+                tabLogin.className = "flex-1 auth-tab text-[#fde047] border-b-2 border-[#fde047]";
+                tabCadastro.className = "flex-1 auth-tab text-slate-500";
+            } else {
+                loginView.classList.add('hidden');
+                cadastroView.classList.remove('hidden');
+                tabCadastro.className = "flex-1 auth-tab text-[#fde047] border-b-2 border-[#fde047]";
+                tabLogin.className = "flex-1 auth-tab text-slate-500";
+            }
+        }
+
+        function realizarLoginLocal() {
+            const rawWhats = document.getElementById('login-whatsapp').value;
+            const whatsLimpo = rawWhats.replace(/\D/g, "");
+
+            if (!whatsLimpo || whatsLimpo.length < 8) {
+                return alert("POR FAVOR, INSIRA UM WHATSAPP VÁLIDO!");
+            }
+
+            db.ref(`lojas/${LOJA_ID}/usuarios/${whatsLimpo}`).once('value').then(snap => {
+                if (snap.exists()) {
+                    const dadosUsuario = snap.val();
+                    localStorage.setItem('jdp_cliente_nome', dadosUsuario.nome);
+                    localStorage.setItem('jdp_cliente_whatsapp', dadosUsuario.whatsapp);
+                    localStorage.setItem('jdp_cliente_endereco', dadosUsuario.endereco || "MANAUS");
+                                                                                                                             
+                    vincularUsuarioFirebase(dadosUsuario.whatsapp);
+                    document.getElementById('modal-cadastro').style.display = 'none';
+                } else {
+                    alert("WHATSAPP NÃO LOCALIZADO! FAÇA SEU CADASTRO RÁPIDO NA OUTRA ABA.");
+                    alternarAbaAuth('cadastro');
+                }
+            }).catch(err => {
+                alert("ERRO DE COMUNICAÇÃO NO BANCO DE DADOS.");
+            });
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('dropdown-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        window.addEventListener('click', function(e) {
+            const menu = document.getElementById('dropdown-menu');
+            if (menu) {
+                const button = menu.previousElementSibling;
+                if (!menu.classList.contains('hidden') && !menu.contains(e.target) && !button.contains(e.target)) {
+                    menu.classList.add('hidden');
+                }
+            }
+        });
+
+        function deslogarSistema() {
+            if (confirm("Deseja realmente sair da conta?")) {
+                localStorage.removeItem('jdp_cliente_nome');
+                localStorage.removeItem('jdp_cliente_whatsapp');
+                localStorage.removeItem('jdp_cliente_endereco');
+                location.reload();
+            }
+        }
+
+        function atualizarLinksComUsuario() {
+            const whats = localStorage.getItem('jdp_cliente_whatsapp') || "";
+            const queryParam = whats ? `?u=${whats}` : "";
+                                                                                          
+            document.getElementById('btn-logo').href = "https://pradodalapa-hue.github.io/JDPSistemasmaprtyss688jfdssyiihfd/" + queryParam;
+            document.getElementById('btn-Jogo').href = "https://pradodalapa-hue.github.io/JDPSistemastigerrtyss688jfdssyiihfd/" + queryParam;
+            document.getElementById('btn-Chat').href = "https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/" + queryParam;
         }
 
         let currentSlide = 0;
         function startBannerRotation() {
             const track = document.getElementById('sliderTrack');
-            if(!track) return;
             const slides = track.children;
             if (slides.length <= 1) return;
-            
+                                                                                          
             setInterval(() => {
                 currentSlide = (currentSlide + 1) % slides.length;
                 track.style.transform = `translateX(-${currentSlide * 100}%)`;
@@ -808,485 +1124,235 @@
         }
 
         function renderBanners() {
-            const track = document.getElementById('sliderTrack');
-            if(!track) return;
-            track.innerHTML = bannerData.map(b => `
+            document.getElementById('sliderTrack').innerHTML = bannerData.map(b => `
                 <div class="slide">
-                    <img src="${b.img}" onerror="this.src='${BA_FECHADO_IMG}'">
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent flex items-end p-4">
-                        <span class="text-white font-black italic text-[8px] tracking-wider uppercase">${b.text}</span>
+                    <img src="${b.img}" onerror="this.src='${FOTO_ERRO}'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent flex items-end p-6">
+                        <span class="text-white font-black italic text-sm tracking-wider uppercase">${b.text}</span>
                     </div>
                 </div>`).join('');
         }
 
-        function registerSession() {
-            const name = document.getElementById('user-name-input').value.trim();
-            const phone = document.getElementById('user-phone-input').value.replace(/\D/g, "");
+        // =====================================================================
+        //  VINCULAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL COM O DONYPAY (FORMATO R$ 99,01)
+        // =====================================================================
+        function vincularUsuarioFirebase(whatsapp) {
+            const whatsLimpo = whatsapp.replace(/\D/g, "");
 
-            if (!name || !phone) {
-                alert("Por favor, preencha os dados de login.");
-                return;
-            }
-
-            clientSession = { name: name.toUpperCase(), phone: phone, address: "ENTREGA PADRÃO" };
-            
-            localStorage.setItem('jdp_cliente_nome', name.toUpperCase());
-            localStorage.setItem('jdp_cliente_whatsapp', phone);
-            localStorage.setItem('jdp_cliente_endereco', "ENTREGA CENTRAL");
-
-            document.getElementById('login-screen').style.display = 'none';
-            document.documentElement.classList.add('session-active');
-
-            db.ref(`lojas/${LOJA_ID}/usuarios/${phone}`).get().then(snap => {
-                if (!snap.exists()) {
-                    db.ref(`lojas/${LOJA_ID}/usuarios/${phone}`).set({
-                        nome: name.toUpperCase(),
-                        whatsapp: phone,
-                        endereco: "ENTREGA CENTRAL",
-                        donycoins: 10,
-                        currentUnlocked: 1,
-                        data_cadastro: Date.now(),
-                        status_missao: "nenhuma"
-                    });
-                }
-                syncClientState(phone);
-            });
-        }
-
-        function syncClientState(phone) {
-            document.getElementById('client-panel').classList.remove('hidden');
-            document.getElementById('client-header-name').innerText = clientSession.name;
-
-            db.ref(`lojas/${LOJA_ID}/usuarios/${phone}`).on('value', snap => {
-                const data = snap.val();
-                if (!data) return;
-
-                if (data.currentUnlocked > state.currentUnlocked) {
-                    triggerLevelUpAnimation();
-                }
-
-                state.currentUnlocked = data.currentUnlocked || 1;
-                document.getElementById('display-coins-header').innerText = `${Math.floor(data.donycoins || 0)} COINS`;
-                document.getElementById('progress-badge').innerText = `Nível ${Math.min(state.currentUnlocked, 6)}`;
-
-                if (state.currentUnlocked > 6) {
-                    document.getElementById('chests-section').classList.add('hidden');
-                    document.getElementById('games-section').classList.add('hidden');
-                    document.getElementById('completed-section').classList.remove('hidden');
-                    
-                    if (!playedDestruction) {
-                        cachedUserDataForCelebration = data;
-                        prepararGatilhoCelebracao();
-                    }
-                } else {
-                    document.getElementById('chests-section').classList.remove('hidden');
-                    document.getElementById('games-section').classList.remove('hidden');
-                    document.getElementById('completed-section').classList.add('hidden');
-                    document.getElementById('celebration-trigger-overlay').classList.add('hidden');
-                }
-
-                renderChests();
-
-                if (state.activeChest) {
-                    const statusBox = document.getElementById('status-display-box');
-                    const statusText = document.getElementById('status-text');
-
-                    if (data.status_missao === "pendente") {
-                        statusBox.className = "bg-yellow-300/10 border border-yellow-300/30 p-3 rounded-xl text-center glow-yellow";
-                        statusText.className = "text-xs font-black text-yellow-300 tracking-wider animate-pulse";
-                        statusText.innerText = "VERIFICANDO...";
-                    } else if (data.status_missao === "rejeitada") {
-                        statusBox.className = "bg-red-500/10 border border-red-500/30 p-3 rounded-xl text-center glow-red animate-bounce";
-                        statusText.className = "text-[10px] font-black text-red-500 tracking-wider";
-                        statusText.innerText = "ATENÇÃO: EVITE FRAUDES!";
-                    } else if (data.status_missao === "aprovada") {
-                        statusBox.className = "bg-green-500/10 border border-green-500/30 p-3 rounded-xl text-center";
-                        statusText.className = "text-xs font-black text-green-400 tracking-wider";
-                        statusText.innerText = "APROVADA!";
-                        setTimeout(() => { fecharModalBau(); }, 2000);
-                    } else {
-                        statusBox.className = "bg-black border border-slate-800 p-3 rounded-xl text-center";
-                        statusText.className = "text-xs font-black text-slate-500 tracking-wider";
-                        statusText.innerText = "NENHUM ENVIADO";
-                    }
+            db.ref(`lojas/${LOJA_ID}/usuarios/${whatsLimpo}`).on('value', snap => {
+                const user = snap.val();
+                if (user) {
+                    donycoinsUsuario = parseFloat(user.donycoins) || 0;
+                                          
+                    // Formatação Suprema Exigida pelo Criador (R$ 99,01)
+                    const saldoFormatado = "R$ " + donycoinsUsuario.toFixed(2).replace('.', ',');
+                    document.getElementById('coin-count').innerText = saldoFormatado;
+                    document.getElementById('checkout-coin-balance').innerText = saldoFormatado;
+                                                              
+                    calcularPrecoFinal();
                 }
             });
+            atualizarLinksComUsuario();
         }
 
-        // ================================================================= -->
-        //  PREPARAÇÃO E GATILHO DA CERIMÔNIA POR TOQUE NA TELA (0% BLOQUEIOS)
-        // ================================================================= -->
-        function prepararGatilhoCelebracao() {
-            const overlayGatilho = document.getElementById('celebration-trigger-overlay');
-            overlayGatilho.classList.remove('hidden');
-
-            const dispararCerimoniaSegura = () => {
-                overlayGatilho.classList.add('hidden');
-                overlayGatilho.removeEventListener('click', dispararCerimoniaSegura);
-                overlayGatilho.removeEventListener('touchstart', dispararCerimoniaSegura);
-                
-                playedDestruction = true;
-                executarEfeitoCompleto(cachedUserDataForCelebration);
-            };
-
-            overlayGatilho.addEventListener('click', dispararCerimoniaSegura);
-            overlayGatilho.addEventListener('touchstart', dispararCerimoniaSegura);
-        }
-
-        // ================================================================= -->
-        //  EXECUÇÃO SEQUENCIAL DE 2 VÍDEOS DE 10 SEGUNDOS COM SOM ATIVO
-        // ================================================================= -->
-        function executarEfeitoCompleto(userData) {
-            document.body.classList.add('vibrate-active');
-            if (navigator.vibrate) {
-                navigator.vibrate([100, 50, 100, 50, 100, 50, 300, 100, 500]);
-            }
-
-            const overlay = document.getElementById('destruction-overlay');
-            const videoContainer = document.getElementById('video-container');
-            const video = document.getElementById('celebration-video');
-
-            overlay.classList.remove('hidden');
-            videoContainer.classList.remove('hidden');
-
-            const videoUrls = [
-                "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/video/alarm_10s.mp4",
-                "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/media/jdp_1779770754904_074ba93928fc9a05576796f47d810121.mp4"
-            ];
-
-            let currentVideoIdx = 0;
-
-            const playNextVideo = () => {
-                if (currentVideoIdx < videoUrls.length) {
-                    video.src = videoUrls[currentVideoIdx];
-                    video.load();
-                    video.muted = false;
-                    
-                    const playPromise = video.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(error => {
-                            console.log("Fallback de segurança de som:", error);
-                            video.muted = true;
-                            video.play();
-                        });
-                    }
-
-                    currentVideoIdx++;
-                    // Cada vídeo é executado por exatamente 10 segundos
-                    setTimeout(playNextVideo, 10000);
-                } else {
-                    // Finalização segura de ambos os vídeos
-                    concluirCerimonia(userData);
-                }
-            };
-
-            playNextVideo();
-        }
-
-        function concluirCerimonia(userData) {
-            const overlay = document.getElementById('destruction-overlay');
-            const video = document.getElementById('celebration-video');
-            try { video.pause(); } catch(e){}
-            
-            document.body.classList.remove('vibrate-active');
-            overlay.classList.add('hidden');
-            
-            generateCertificateCanvas(userData.nome, userData.whatsapp);
-            db.ref(`lojas/${LOJA_ID}/usuarios/${userData.whatsapp}`).update({ certificado_gerado: true });
-        }
-
-        function triggerLevelUpAnimation() {
-            const alertBox = document.getElementById('floating-level-alert');
-            alertBox.classList.remove('hidden');
-            setTimeout(() => { alertBox.classList.add('hidden'); }, 4000);
-        }
-
-        function initMissions() {
-            db.ref(`${LOJA_ID}/missoes_baus`).on('value', snap => {
-                const data = snap.val();
-                if (data) {
-                    missionsConfig = data;
-                } else {
-                    createDefaultMissions();
-                }
-                if (clientSession) renderChests();
-            });
-        }
-
-        function createDefaultMissions() {
-            const defaults = {};
-            for (let i = 1; i <= 6; i++) {
-                defaults[i] = {
-                    id: i,
-                    title: `Missão Industrial Baú 0${i}`,
-                    link: `https://wa.me/${CHIP_DESTINO}?text=Olá,%20gostaria%20de%20concluir%20minha%20missão%20do%20baú%200${i}!`,
-                    img: BA_FECHADO_IMG,
-                    desc: "Conclua a tarefa de engenharia designada por Helena."
-                };
-            }
-            db.ref(`${LOJA_ID}/missoes_baus`).set(defaults);
-        }
-
-        function renderChests() {
-            const grid = document.getElementById('chests-grid');
-            if (!grid) return;
+        /* ===================================================================== */
+        /*  RENDERIZADOR DE GRID COM A CAMADA DE VIDRO (ANTIRROUBO DE FOTOS)     */
+        /* ===================================================================== */
+        function renderGrid(filter) {
+            categoriaAtiva = filter;
+            const grid = document.getElementById('product-grid');
             grid.innerHTML = '';
+            const filtrados = filter === 'todos' ? produtosFirebase : produtosFirebase.filter(p => p.cat === filter);
+                                                                                          
+            filtrados.forEach(p => {
+                const img = p.link || p.img || FOTO_ERRO;
+                                 
+                // Procurar se o item está no carrinho para renderizar o Badge exato
+                const itemNoCarrinho = carrinho.find(c => c.nome === p.nome);
+                const qtd = itemNoCarrinho ? itemNoCarrinho.qtd : 0;
 
-            for (let i = 1; i <= 6; i++) {
-                let status = 'bloqueado';
-                let borderClass = 'border-slate-800 bg-slate-950/40';
-                let textClass = 'text-slate-600';
-                let glowClass = '';
-                let chestImg = BA_FECHADO_IMG;
-
-                if (i < state.currentUnlocked) {
-                    status = 'concluido';
-                    borderClass = 'border-yellow-400/30 bg-slate-900/60';
-                    textClass = 'text-yellow-300/80';
-                    chestImg = BA_ABERTO_IMG;
-                } else if (i === state.currentUnlocked) {
-                    status = 'disponivel';
-                    borderClass = 'border-cyan-500 bg-slate-900 border-2 cursor-pointer';
-                    textClass = 'text-cyan-400';
-                    glowClass = 'glow-cyan';
-                    chestImg = BA_FECHADO_IMG;
-                }
-
-                const card = document.createElement('div');
-                card.className = `p-1.5 rounded-xl flex flex-col items-center justify-between text-center transition-all duration-300 relative h-20 ${borderClass} ${glowClass} overflow-hidden`;
-
-                if (status === 'disponivel') {
-                    card.onclick = () => abrirModalBau(i);
-                }
-
-                card.innerHTML = `
-                    <div class="w-full h-10 flex items-center justify-center relative mt-0.5">
-                        <img src="${chestImg}" class="h-9 w-auto object-contain transition-all duration-300" />
-                    </div>
-                    <div class="w-full bg-black/80 py-0.5 border-t border-slate-800/50 backdrop-blur-sm z-10">
-                        <span class="text-[7px] font-black block ${textClass}">BAÚ 0${i}</span>
-                    </div>
-                    ${status === 'concluido' ? '<span class="absolute top-0.5 right-0.5 bg-green-600 text-white text-[5px] font-bold px-0.5 rounded shadow">OK</span>' : ''}
-                `;
-                grid.appendChild(card);
-            }
+                grid.innerHTML += `
+                    <div class="card-venda" onclick="openModal('${p.nome}', '${p.preco}', '${img}')">
+                        ${qtd > 0 ? `<div class="badge-qtd">${qtd}</div>` : ''}
+                                                 
+                        <!-- CAMADA DE VIDRO BLINDADA CONTRA ARRASTAR E SALVAR -->
+                        <div class="glass-shield"></div>
+                                                 
+                        <img src="${img}" onerror="this.src='${FOTO_ERRO}'">
+                                                 
+                        <div class="card-info">
+                            <div class="nome-produto">${p.nome}</div>
+                            <div class="price">R$ ${parseFloat(p.preco || 0).toFixed(2).replace('.', ',')}</div>
+                        </div>
+                    </div>`;
+            });
         }
 
-        function abrirModalBau(id) {
-            state.activeChest = id;
-            const config = missionsConfig[id] || { title: `Baú 0${id}`, desc: "Tarefa de Engenharia Helena" };
-            
-            document.getElementById('mission-title').innerText = config.title;
-            document.getElementById('mission-desc').innerText = config.desc;
-            
-            const imgElement = document.getElementById('mission-image');
-            imgElement.src = config.img || config.imagem_promocao || BA_FECHADO_IMG;
-
-            state.activePXID = generatePXID();
-            document.getElementById('px-id-display').innerText = state.activePXID;
-
-            document.getElementById('proof-upload-container').classList.remove('hidden');
-            document.getElementById('scanner-laser').classList.remove('hidden');
-
-            document.getElementById('active-chest-modal').classList.remove('hidden');
+        function openModal(nome, preco, img) {
+            document.getElementById('modal-nome').innerText = nome;
+            document.getElementById('modal-preco').innerText = "R$ " + parseFloat(preco).toFixed(2).replace('.', ',');
+            document.getElementById('modal-img').src = img;
+            document.getElementById('product-modal').classList.remove('hidden');
         }
 
-        function fecharModalBau() {
-            state.activeChest = null;
-            document.getElementById('active-chest-modal').classList.add('hidden');
+        function closeModal() {
+            document.getElementById('product-modal').classList.add('hidden');
         }
 
-        function generatePXID() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let code = 'PX-';
-            for (let i = 0; i < 6; i++) {
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return code;
-        }
-
-        async function gerarECompartilharCanvas() {
-            if (!state.activeChest) return;
-            const config = missionsConfig[state.activeChest] || { link: `https://wa.me/${CHIP_DESTINO}` };
-            
-            const urlFotoPromo = config.img || config.imagem_promocao || BA_FECHADO_IMG;
-            
-            const canvas = document.getElementById('hidden-task-canvas');
-            const ctx = canvas.getContext('2d');
-
-            const img = new Image();
-            img.crossOrigin = "anonymous";
-            img.src = urlFotoPromo;
-
-            const dispararCompartilhamento = (fotoBlob) => {
-                const file = new File([fotoBlob], `PROMO_${state.activePXID}.png`, { type: "image/png" });
-                const textToShare = `Olá! Acabo de gerar meu comprovante de validação para o Baú 0${state.activeChest}.\n\n🔑 CHAVE PX: ${state.activePXID}\n👤 OPERADOR: ${clientSession.name}\n\nLink do Diário: ${config.link}`;
-
-                db.ref(`lojas/${LOJA_ID}/usuarios/${clientSession.phone}`).update({
-                    activePXID: state.activePXID,
-                    last_active_chest: state.activeChest,
-                    idGenerationTime: Date.now()
-                }).then(() => {
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        navigator.share({
-                            files: [file],
-                            title: 'Validação Helena JDP',
-                            text: textToShare
-                        }).catch(() => {
-                            fallbackDownloadGatilho(canvas, textToShare);
-                        });
-                    } else {
-                        fallbackDownloadGatilho(canvas, textToShare);
-                    }
+        function handleAddToCartFromModal() {
+            const nome = document.getElementById('modal-nome').innerText;
+            const precoStr = document.getElementById('modal-preco').innerText.replace('R$ ', '').replace(',', '.');
+            const img = document.getElementById('modal-img').src;
+                                                                                          
+            const item = carrinho.find(c => c.nome === nome);
+            if (item) {
+                item.qtd++;
+            } else {
+                carrinho.push({
+                    id: "ID-" + Math.random().toString(36).substr(2, 9).toUpperCase(),
+                    nome: nome,
+                    preco: parseFloat(precoStr),
+                    img: img,
+                    qtd: 1
                 });
-            };
-
-            img.onload = () => {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0, img.width, img.height);
-                canvas.toBlob(dispararCompartilhamento, "image/png");
-            };
-
-            img.onerror = () => {
-                canvas.width = 500;
-                canvas.height = 500;
-                ctx.fillStyle = '#020617';
-                ctx.fillRect(0, 0, 500, 500);
-                ctx.strokeStyle = '#06b6d4';
-                ctx.lineWidth = 10;
-                ctx.strokeRect(20, 20, 460, 460);
-                
-                canvas.toBlob(dispararCompartilhamento, "image/png");
-            };
+            }
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+            updateCartUI();
+            closeModal();
         }
 
-        function fallbackDownloadGatilho(canvas, textToShare) {
+        function updateCartUI() {
+            const list = document.getElementById('cart-items-list');
+            const countEl = document.getElementById('cart-count');
+                                                                                          
+            subtotalPedido = 0;
+            let totalItens = 0;
+                                                                                          
+            list.innerHTML = carrinho.map((item, idx) => {
+                subtotalPedido += (item.preco * item.qtd);
+                totalItens += item.qtd;
+                return `
+                    <div class="flex items-center gap-3 bg-[#0f172a] p-3 rounded-lg border border-slate-800">
+                        <div class="flex-1 text-[11px] font-bold">
+                            <span class="text-[#fde047]">${item.qtd}x</span> ${item.nome}
+                        </div>
+                        <div class="text-xs font-mono text-slate-300">R$ ${(item.preco * item.qtd).toFixed(2).replace('.', ',')}</div>
+                        <button onclick="removerItem(${idx})" class="text-red-500 font-black px-2">X</button>
+                    </div>`;
+            }).join('');
+                                                                                          
+            countEl.innerText = totalItens;
+            calcularPrecoFinal();
+                         
+            // Re-renderizar vitrine para atualizar os badges de quantidade
+            renderGrid(categoriaAtiva);
+        }
+
+        function calcularPrecoFinal() {
+            const usarCoins = document.getElementById('usar-donycoins').checked;
+            const totalEl = document.getElementById('cart-total');
+
+            if (usarCoins && donycoinsUsuario > 0) {
+                valorDesconto = Math.min(subtotalPedido, donycoinsUsuario);
+                totalComDesconto = subtotalPedido - valorDesconto;
+            } else {
+                valorDesconto = 0;
+                totalComDesconto = subtotalPedido;
+            }
+                                                                                          
+            totalEl.innerText = `TOTAL: R$ ${totalComDesconto.toFixed(2).replace('.', ',')}`;
+        }
+
+        function removerItem(idx) {
+            carrinho.splice(idx, 1);
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+            updateCartUI();
+        }
+
+        function toggleCartScreen() {
+            document.getElementById('cart-screen').classList.toggle('hidden');
+        }
+
+        // CONTROLADORES DE MODAIS
+        function verificarFluxoCadastro() {
+            if (carrinho.length === 0) return alert("CARRINHO VAZIO");
+            const w = localStorage.getItem('jdp_cliente_whatsapp');
+            if (!w) {
+                document.getElementById('modal-cadastro').style.display = 'flex';
+                alternarAbaAuth('login');
+            } else {
+                gerarConfirmacao();
+            }
+        }
+
+        function gerarConfirmacao() {
+            idPedidoAtual = "JDP-" + Math.random().toString(36).substr(2, 5).toUpperCase();
+            document.getElementById('id-pedido-display').innerText = "ID: #" + idPedidoAtual;
+            document.getElementById('comp-cliente-nome').innerText = localStorage.getItem('jdp_cliente_nome').toUpperCase();
+            document.getElementById('comp-cliente-phone').innerText = localStorage.getItem('jdp_cliente_whatsapp');
+            document.getElementById('comp-cliente-end').innerText = localStorage.getItem('jdp_cliente_endereco').toUpperCase();
+            document.getElementById('txt-evangelico').innerText = frases[Math.floor(Math.random() * frases.length)];
+            document.getElementById('data-recibo').innerText = "AUTENTICADO EM: " + new Date().toLocaleString();
+                                                                                          
+            document.getElementById('comp-itens-list').innerHTML = carrinho.map(i => {
+                return `
+                    <div class="flex justify-between">
+                        <span>${i.qtd}x ${i.nome}</span>
+                        <span>R$ ${(i.qtd * i.preco).toFixed(2).replace('.', ',')}</span>
+                    </div>`;
+            }).join('');
+                                                                                          
+            document.getElementById('comp-subtotal').innerText = `R$ ${subtotalPedido.toFixed(2).replace('.', ',')}`;
+                                                                                          
+            if (valorDesconto > 0) {
+                document.getElementById('comp-desconto-row').classList.remove('hidden');
+                document.getElementById('comp-desconto').innerText = `-R$ ${valorDesconto.toFixed(2).replace('.', ',')}`;
+            } else {
+                document.getElementById('comp-desconto-row').classList.add('hidden');
+            }
+                                                                                          
+            document.getElementById('comp-total').innerText = `R$ ${totalComDesconto.toFixed(2).replace('.', ',')}`;
+            document.getElementById('modal-supreme').style.display = 'flex';
+        }
+
+        function dispararFallbackDownload(imgData, msg) {
             const link = document.createElement('a');
-            link.download = `VALIDACAO_${state.activePXID}.png`;
-            link.href = canvas.toDataURL('image/png');
+            link.href = imgData;
+            link.download = `PEDIDO_${idPedidoAtual}.png`;
             link.click();
-            
+            alert("COMPROVANTE GERADO! REDIRECIONANDO AO WHATSAPP...");
             setTimeout(() => {
-                const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(textToShare)}`;
-                window.open(whatsappUrl, '_blank');
+                window.location.href = `https://wa.me/${CHIP_DESTINO}?text=${encodeURIComponent(msg)}`;
             }, 1000);
         }
 
-        function uploadProof(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const maxDim = 600;
-                    let w = img.width;
-                    let h = img.height;
-                    
-                    if (h > maxDim) {
-                        w = (maxDim / h) * w;
-                        h = maxDim;
-                    }
-                    canvas.width = w;
-                    canvas.height = h;
-                    ctx.drawImage(img, 0, 0, w, h);
-
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
-
-                    const updates = {};
-                    updates[`prints/bau_0${state.activeChest}`] = compressedBase64;
-                    updates[`status_missao`] = "pendente";
-                    updates[`print_url`] = compressedBase64;
-
-                    db.ref(`lojas/${LOJA_ID}/usuarios/${clientSession.phone}`).update(updates);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+        function fecharModalRecibo() {
+            document.getElementById('modal-supreme').style.display = 'none';
         }
 
-        function generateCertificateCanvas(nome, telefone) {
-            const canvas = document.getElementById('certificate-canvas');
-            const ctx = canvas.getContext('2d');
-
-            canvas.width = 600;
-            canvas.height = 400;
-
-            ctx.fillStyle = '#020617';
-            ctx.fillRect(0, 0, 600, 400);
-
-            ctx.strokeStyle = '#06b6d4';
-            ctx.lineWidth = 6;
-            ctx.strokeRect(15, 15, 570, 370);
-
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(22, 22, 556, 356);
-
-            ctx.fillStyle = '#fde047';
-            ctx.font = 'bold 24px "JetBrains Mono", monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('HELENA SYSTEM COGNITIVE', 300, 70);
-
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 16px "JetBrains Mono", monospace';
-            ctx.fillText('COMPROVANTE DE PREMIAÇÃO SUPREMA', 300, 105);
-
-            ctx.fillStyle = '#e2e8f0';
-            ctx.font = '14px "JetBrains Mono", monospace';
-            ctx.fillText('Certificamos para resgate que o operador(a)', 300, 160);
-
-            ctx.fillStyle = '#fde047';
-            ctx.font = 'bold 20px "JetBrains Mono", monospace';
-            ctx.fillText(nome.toUpperCase(), 300, 200);
-
-            ctx.fillStyle = '#e2e8f0';
-            ctx.font = '14px "JetBrains Mono", monospace';
-            ctx.fillText(`Telefone: ${telefone} concluiu com sucesso`, 300, 240);
-            ctx.fillText('todas as Missões de Elite da Helena.', 300, 265);
-
-            const now = new Date();
-            ctx.fillStyle = '#64748b';
-            ctx.font = '10px "JetBrains Mono", monospace';
-            ctx.fillText(`DATA: ${now.toLocaleDateString()} | HORA: ${now.toLocaleTimeString()}`, 300, 310);
-            ctx.fillText('CHAVE DE SEGURANÇA: PRINCESA DIAMANTE', 300, 330);
-
-            document.getElementById('certificate-modal').classList.remove('hidden');
+        function abrirMissoes() {
+            const whats = localStorage.getItem('jdp_cliente_whatsapp');
+            if(!whats) return alert("FAÇA LOGIN PARA ACESSAR AS MISSÕES!");
+            document.getElementById('modal-missoes').style.display = 'flex';
         }
 
-        function reabrirCertificado() {
-            if (clientSession) {
-                generateCertificateCanvas(clientSession.name, clientSession.phone);
-            }
+        function fecharMissoes() {
+            document.getElementById('modal-missoes').style.display = 'none';
         }
 
-        function downloadCertificate() {
-            const canvas = document.getElementById('certificate-canvas');
-            const link = document.createElement('a');
-            link.download = `Certificado-Helena-${clientSession.name}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+        function filterCategory(cat, el) {
+            document.querySelectorAll('.category-item').forEach(i => i.classList.remove('category-active'));
+            el.classList.add('category-active');
+            renderGrid(cat);
         }
 
-        // ================================================================= -->
-        //  AÇÃO DUPLA DO BOTÃO DE RESGATE: DOWNLOAD TICKET + WHATSAPP DIRETO
-        // ================================================================= -->
-        function claimPrize() {
-            // Ação 1: Executar o download do canvas automaticamente
-            downloadCertificate();
-
-            // Ação 2: Direcionar para o WhatsApp do Criador com a mensagem pronta
-            setTimeout(() => {
-                const textToShare = `Olá, Sr. José! Sou o operador ${clientSession.name} (${clientSession.phone}) e acabo de concluir todas as 6 etapas da Helena! Solicito meu Prêmio Supremo definido pelo sistema. 🔑 CHAVE DE SEGURANÇA: PRINCESA DIAMANTE`;
-                const whatsappUrl = `https://api.whatsapp.com/send?phone=${CHIP_DESTINO}&text=${encodeURIComponent(textToShare)}`;
-                window.open(whatsappUrl, '_blank');
-                document.getElementById('certificate-modal').classList.add('hidden');
-            }, 800);
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('DONY BURGUER sw: Registrado', reg.scope))
+                .catch(err => console.log('sw Erro:', err));
+            });
         }
     </script>
 </body>
-</html>
+    </html>
