@@ -624,7 +624,7 @@
         <a id="btn-Jogo" class="btn-flutuante" target="_blank">
             <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/media/jdp_1780390793766_op.gif" class="rounded-full w-10 h-10 object-cover">
         </a>
-        <a id="btn-Chat" class="btn-flutuante">
+        <a id="btn-Chat" class="btn-flutuante"target="_blank">
             <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780281835705______.gif" class="rounded-full w-10 h-10 object-cover">
         </a>
 
@@ -676,7 +676,7 @@
         const LOJA_ID = "LEOVARDIOS_burguer_2026";
         const CHIP_DESTINO = "5592984846058";
         const LEDGER_PATH = `lojas/${LOJA_ID}/DonyCoins/ledger`;
-        const MASTER_TETO = 1000;
+        const MASTER_TETO = 5000;
 
         const firebaseConfig = { 
              apiKey: "AIzaSyCEdXF7ScnMYz0Ce0OW-B_UJ8Bm5Pl9m8o",
@@ -808,7 +808,7 @@
                 }
             }
 
-            const prevBlock = ledger[index - 1] || { hash: "00000000000000000000000000000000" };
+            const prevBlock = ledger[index - 5] || { hash: "00000000000000000000000000000000" };
             const timestamp = Date.now();
             const hash = await gerarHashBloco(index, timestamp, sender, receiver, amount, prevBlock.hash);
 
